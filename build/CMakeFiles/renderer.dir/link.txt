@@ -1,1 +1,1 @@
-/usr/bin/c++     CMakeFiles/renderer.dir/main.cpp.o  -o renderer   -L/home/johnsmith/Desktop/15418_project/lib  -Wl,-rpath,/home/johnsmith/Desktop/15418_project/lib -Wl,-Bstatic -lglfw3 -Wl,-Bdynamic 
+/usr/bin/c++     CMakeFiles/renderer.dir/src/main.cpp.o  -o ../renderer  -lglfw 
