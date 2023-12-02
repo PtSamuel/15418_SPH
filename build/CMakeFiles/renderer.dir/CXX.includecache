@@ -6,17 +6,19 @@
 
 #IncludeRegexTransform: 
 
-../src/include/glad.h
-KHR/khrplatform.h
--
-
 /home/johnsmith/Desktop/15418_project/src/main.cpp
-glad.h
+GL/glew.h
 -
 GLFW/glfw3.h
 -
 iostream
 -
 cmath
+-
+stdio.h
+-
+thread
+-
+chrono
 -
 

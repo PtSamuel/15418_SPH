@@ -1,1 +1,1 @@
-/usr/bin/c++     CMakeFiles/renderer.dir/src/main.cpp.o CMakeFiles/renderer.dir/src/glad.c.o  -o ../renderer  /usr/lib/x86_64-linux-gnu/libOpenGL.so /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libGLU.so /usr/lib/x86_64-linux-gnu/libGLEW.so -lglfw 
+/usr/bin/c++     CMakeFiles/renderer.dir/src/main.cpp.o  -o ../renderer  /usr/lib/x86_64-linux-gnu/libOpenGL.so /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libGLU.so /usr/lib/x86_64-linux-gnu/libGLEW.so -lglfw 
