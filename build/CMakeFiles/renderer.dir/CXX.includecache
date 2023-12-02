@@ -15,10 +15,4 @@ iostream
 -
 cmath
 -
-stdio.h
--
-thread
--
-chrono
--
 
