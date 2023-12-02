@@ -123,32 +123,32 @@ renderer/fast:
 	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/build
 .PHONY : renderer/fast
 
-src/test.o: src/test.cpp.o
+src/main.o: src/main.cpp.o
 
-.PHONY : src/test.o
+.PHONY : src/main.o
 
 # target to build an object file
-src/test.cpp.o:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/test.cpp.o
-.PHONY : src/test.cpp.o
+src/main.cpp.o:
+	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
 
-src/test.i: src/test.cpp.i
+src/main.i: src/main.cpp.i
 
-.PHONY : src/test.i
+.PHONY : src/main.i
 
 # target to preprocess a source file
-src/test.cpp.i:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/test.cpp.i
-.PHONY : src/test.cpp.i
+src/main.cpp.i:
+	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
 
-src/test.s: src/test.cpp.s
+src/main.s: src/main.cpp.s
 
-.PHONY : src/test.s
+.PHONY : src/main.s
 
 # target to generate assembly for a file
-src/test.cpp.s:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/test.cpp.s
-.PHONY : src/test.cpp.s
+src/main.cpp.s:
+	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
 # Help Target
 help:
@@ -159,9 +159,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... renderer"
-	@echo "... src/test.o"
-	@echo "... src/test.i"
-	@echo "... src/test.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
 .PHONY : help
 
 

@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "../renderer"
   "../renderer.pdb"
-  "CMakeFiles/renderer.dir/src/test.cpp.o"
+  "CMakeFiles/renderer.dir/src/main.cpp.o"
 )
 
 # Per-language clean rules from dependency scanning.

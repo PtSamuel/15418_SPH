@@ -6,9 +6,25 @@
 
 #IncludeRegexTransform: 
 
-/home/johnsmith/Desktop/15418_project/src/test.cpp
+../src/include/Particle.h
+
+/home/johnsmith/Desktop/15418_project/src/main.cpp
 GL/glew.h
 -
 GLFW/glfw3.h
+-
+iostream
+-
+cmath
+-
+Particle.h
+-
+vector
+-
+random
+-
+cassert
+-
+algorithm
 -
 

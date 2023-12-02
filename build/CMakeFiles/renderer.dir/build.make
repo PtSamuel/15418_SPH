@@ -57,27 +57,27 @@ include CMakeFiles/renderer.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/renderer.dir/flags.make
 
-CMakeFiles/renderer.dir/src/test.cpp.o: CMakeFiles/renderer.dir/flags.make
-CMakeFiles/renderer.dir/src/test.cpp.o: ../src/test.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/renderer.dir/src/test.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/renderer.dir/src/test.cpp.o -c /home/johnsmith/Desktop/15418_project/src/test.cpp
+CMakeFiles/renderer.dir/src/main.cpp.o: CMakeFiles/renderer.dir/flags.make
+CMakeFiles/renderer.dir/src/main.cpp.o: ../src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/renderer.dir/src/main.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/renderer.dir/src/main.cpp.o -c /home/johnsmith/Desktop/15418_project/src/main.cpp
 
-CMakeFiles/renderer.dir/src/test.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/renderer.dir/src/test.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/johnsmith/Desktop/15418_project/src/test.cpp > CMakeFiles/renderer.dir/src/test.cpp.i
+CMakeFiles/renderer.dir/src/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/renderer.dir/src/main.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/johnsmith/Desktop/15418_project/src/main.cpp > CMakeFiles/renderer.dir/src/main.cpp.i
 
-CMakeFiles/renderer.dir/src/test.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/renderer.dir/src/test.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/johnsmith/Desktop/15418_project/src/test.cpp -o CMakeFiles/renderer.dir/src/test.cpp.s
+CMakeFiles/renderer.dir/src/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/renderer.dir/src/main.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/johnsmith/Desktop/15418_project/src/main.cpp -o CMakeFiles/renderer.dir/src/main.cpp.s
 
 # Object files for target renderer
 renderer_OBJECTS = \
-"CMakeFiles/renderer.dir/src/test.cpp.o"
+"CMakeFiles/renderer.dir/src/main.cpp.o"
 
 # External object files for target renderer
 renderer_EXTERNAL_OBJECTS =
 
-../renderer: CMakeFiles/renderer.dir/src/test.cpp.o
+../renderer: CMakeFiles/renderer.dir/src/main.cpp.o
 ../renderer: CMakeFiles/renderer.dir/build.make
 ../renderer: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 ../renderer: /usr/lib/x86_64-linux-gnu/libGLX.so
