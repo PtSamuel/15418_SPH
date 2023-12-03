@@ -357,12 +357,36 @@ void draw_arrow(Vec2 start, Vec2 disp) {
     glEnd();
 }
 
+inline void clamp_particle(Particle &p) {
+    if(p.pos.x > BOX_WIDTH / 2) {
+        p.pos.x = BOX_WIDTH - p.pos.x;
+        p.pos.x = std::max(p.pos.x, -BOX_WIDTH / 2);
+        p.vel.x = -std::abs(p.vel.x);
+    } else if(p.pos.x < -BOX_WIDTH / 2) {
+        p.pos.x = -BOX_WIDTH - p.pos.x;
+        p.pos.x = std::min(p.pos.x, BOX_WIDTH / 2);
+        p.vel.x = std::abs(p.vel.x);
+    }
+
+    if(p.pos.y > BOX_HEIGHT / 2) {
+        p.pos.y = BOX_HEIGHT - p.pos.y;
+        p.pos.y = std::max(p.pos.y, -BOX_HEIGHT / 2);
+        p.vel.y = -std::abs(p.vel.y);
+    } else if(p.pos.y < -BOX_HEIGHT / 2) {
+        p.pos.y = -BOX_HEIGHT - p.pos.y;
+        p.pos.y = std::min(p.pos.y, BOX_HEIGHT / 2);
+        p.vel.y = std::abs(p.vel.y);
+    }
+}
+
 void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
         Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
-        Vec2 disp = particles[i].vel * (0.5 * dt * dt) + particles[i].vel * dt;
-        particles[i].pos = particles[i].pos + disp;
-        particles[i].vel = particles[i].vel + acc * dt;
+        Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
+        p.pos = p.pos + disp;
+        p.vel = p.vel + acc * dt;
+        clamp_particle(p);
     }
 }
 
@@ -430,8 +454,8 @@ int main() {
             draw_arrow(sample, compute_pressure_grad(sample));
         }
 
-        print_vec2(pressure_grads[0]);
-        print_particle(particles[0]);
+        // print_vec2(pressure_grads[0]);
+        // print_particle(particles[0]);
         update_velocities();
 
         glfwSwapBuffers(window);
