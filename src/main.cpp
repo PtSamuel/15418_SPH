@@ -1,145 +1,446 @@
-#include <glad.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
+#include <Particle.h>
+#include <vector>
+#include <random>
+#include <cassert>
+#include <algorithm>
+#include <thread>
+#include <chrono>
 
-const char* vertexShaderSource = R"(
-    #version 330 core
-    layout (location = 0) in vec2 aPos;
-    void main()
-    {
-        gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);
-    }
-)";
 
-const char* fragmentShaderSource = R"(
-    #version 330 core
-    out vec4 FragColor;
-    void main()
-    {
-        FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red color
-    }
-)";
+#define PARTICLES 10
+#define PARTICLE_RADIUS 0.1f
+#define TILE_NUMBER 10
+#define OCCUPANCY 0.8
+#define BOX_WIDTH 20.0f
+#define BOX_HEIGHT 20.0f
+#define EPS 1e-3f
+#define SMOOTH_RADIUS 2.0f
+#define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
+#define PRESSURE_RESPONSE 100.0f
+
+#define TEXTURE_SUBDIVS 100
+
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
+
+float SMOOTH_RADIUS4 = SMOOTH_RADIUS2 * SMOOTH_RADIUS2;
+float SMOOTH_RADIUS8 = SMOOTH_RADIUS4 * SMOOTH_RADIUS4;
+float kernel_volume = M_PI / 4 * SMOOTH_RADIUS8;
+float normalizer = 1 / kernel_volume;
+
+float average_density = TILE_NUMBER * TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
+
+const float dt = 0.01;
+
+static std::mt19937 gen(114514);
+static std::uniform_real_distribution<float> distribution(0, 1);
+
+std::vector<Particle> particles(TILE_NUMBER * TILE_NUMBER);
+std::vector<float> densities(particles.size());
+float max_density;
+std::vector<Vec2> density_grads(particles.size());
+
+std::vector<float> pressures(particles.size());
+std::vector<Vec2> pressure_grads(particles.size());
+
+void errorCallback(int error, const char *description) {
+    std::cerr << "Error: " << description << std::endl;
 }
 
-int main()
-{
-    // Initialize GLFW
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
+void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+}
+
+void renderCircle(float x, float y, float radius) {
+    const int sides = 100;
+
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(x, y); // Center of the circle
+
+    for (int i = 0; i <= sides; ++i) {
+        float angle = 2.0f * M_PI * i / sides;
+        float x_cur = x + radius * std::cos(angle);
+        float y_cur = y + radius * std::sin(angle);
+        glVertex2f(x_cur, y_cur);
     }
 
-    // Set GLFW to use the core profile
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glEnd();
+}
 
-    // Create a GLFW window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Circle Example", nullptr, nullptr);
-    if (!window)
-    {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+void drawBox(float x1, float y1, float x2, float y2) {
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y1);
+    glVertex2f(x2, y2);
+    glVertex2f(x1, y2);
+    glEnd();
+}
+
+GLFWwindow *create_window() {
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        exit(1);
+    }
+
+    glfwSetErrorCallback(errorCallback);
+
+    GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "OpenGL Circle", NULL, NULL);
+    if (!window) {
         glfwTerminate();
-        return -1;
+        exit(1);
     }
 
     glfwMakeContextCurrent(window);
 
-    // Initialize GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
-        return -1;
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW" << std::endl;
+        exit(1);
     }
 
-    // Set the viewport size and register the callback function for window resize
-    glViewport(0, 0, 800, 600);
+    glfwSetKeyCallback(window, keyCallback);
+
+    return window;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+
+    float new_width = width, new_height = height;
+
+    float ratio = (float)width / height;
+    float box_ratio = BOX_WIDTH / BOX_HEIGHT;
+
+    if(box_ratio > ratio)
+        new_height = (float)width / box_ratio;
+    else
+        new_width = (float)height * box_ratio;
+
+    int padding = 50;
+    new_width -= padding * 2 * box_ratio;
+    new_height -= padding * 2;
+
+    int bx = (width - new_width) / 2;
+    int by = (height - new_height) / 2;
+
+    glViewport(bx, by, new_width, new_height);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-BOX_WIDTH / 2.0, BOX_WIDTH / 2.0, -BOX_HEIGHT / 2.0, BOX_HEIGHT / 2.0, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+}
+
+void init_particles(std::vector<Particle> &particles) {
+    for(int i = 0; i < particles.size(); i++) {
+        auto &p = particles[i];
+        p.id = i;
+        p.pos.x = (distribution(gen) - 0.5) * BOX_WIDTH;
+        p.pos.y = (distribution(gen) - 0.5) * BOX_HEIGHT;
+        p.vel = {0, 0};
+    }
+}
+
+void tile_particles(std::vector<Particle> &particles) {
+    assert(particles.size() == TILE_NUMBER* TILE_NUMBER);
+    for(int j = 0; j < TILE_NUMBER; j++)
+        for(int i = 0; i < TILE_NUMBER; i++)
+        {
+            auto &p = particles[TILE_NUMBER * j + i];
+            p.pos.x = (float)(i - TILE_NUMBER * 0.5) / TILE_NUMBER * OCCUPANCY * BOX_WIDTH;
+            p.pos.y = (float)(j - TILE_NUMBER * 0.5) / TILE_NUMBER * OCCUPANCY * BOX_HEIGHT;
+        }
+}
+
+float smoothing_kernal(float radius2, float dist2) {
+    float influence = std::max(0.0f, radius2 - dist2);
+    return influence * influence * influence * normalizer;
+}
+
+Vec2 smoothing_kernal_grad(float radius2, Vec2 disp) {
+    float dist2 = disp.norm2();
+    if(dist2 > radius2)
+        return Vec2(0, 0);
+    
+    float x = -3 * (radius2 - dist2) * (radius2 - dist2) * disp.x * normalizer;
+    float y = -3 * (radius2 - dist2) * (radius2 - dist2) * disp.y * normalizer;
+    return Vec2(x, y);
+}
+
+float compute_density(Vec2 pos) {
+    float density = 0;
+    for(auto &p: particles) {
+        float dist2 = pos.dist2(p.pos);
+        density += smoothing_kernal(SMOOTH_RADIUS2, dist2);
+    }
+    return density;
+}
+
+void compute_densities() {
+    float max = 0;
+    for(int i = 0; i < particles.size(); i++) {
+        float density = compute_density(particles[i].pos);
+        densities[i] = density;
+        if(density > max)
+            max = density;
+    }
+    max_density = max;
+}
+
+float compute_pressure(float density) {
+    return PRESSURE_RESPONSE * (density - average_density);
+}
+
+void compute_pressures() {
+    for(int i = 0; i < particles.size(); i++)
+        pressures[i] = compute_pressure(densities[i]);
+}
+
+Vec2 compute_pressure_grad(Vec2 pos) {
+    Vec2 grad = Vec2(0.0f, 0.0f);
+    for(int i = 0; i < particles.size(); i++) {
+        assert(densities[i] > 0);
+        Vec2 kernel_grad = smoothing_kernal_grad(SMOOTH_RADIUS2, pos - particles[i].pos);
+        grad = grad + kernel_grad * (pressures[i] / densities[i]);
+    }
+    return grad;
+}
+
+void compute_pressure_grads() {
+    for(int i = 0; i < particles.size(); i++)
+        pressure_grads[i] = compute_pressure_grad(particles[i].pos);
+}
+
+Vec2 compute_density_grad(Vec2 pos) {
+    Vec2 grad = Vec2(0, 0);
+    for(auto &p: particles) {
+        Vec2 disp = pos - p.pos;
+        grad = grad + smoothing_kernal_grad(SMOOTH_RADIUS2, disp);
+    }
+    return grad;
+}
+
+void compute_density_grads() {
+    for(int i = 0; i < particles.size(); i++)
+        density_grads[i] = compute_density_grad(particles[i].pos);
+}
+
+GLuint textureID;  // OpenGL texture ID
+
+void computePixelValue(int x, int y) {
+    // This is a placeholder; replace it with your actual function
+    // return static_cast<float>(x) / BOX_WIDTH + static_cast<float>(y) / BOX_HEIGHT;
+    float density = compute_density(
+        Vec2(
+            (float)x / TEXTURE_SUBDIVS * BOX_WIDTH - BOX_WIDTH / 2, 
+            (float)y / TEXTURE_SUBDIVS * BOX_HEIGHT - BOX_HEIGHT / 2
+        )
+    ) / max_density;
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RED, GL_FLOAT, &density);
+}
+
+
+void render_pressure(int x, int y) {
+    // This is a placeholder; replace it with your actual function
+    // return static_cast<float>(x) / BOX_WIDTH + static_cast<float>(y) / BOX_HEIGHT;
+    Vec2 pos = Vec2(
+        (float)x / TEXTURE_SUBDIVS * BOX_WIDTH - BOX_WIDTH / 2, 
+        (float)y / TEXTURE_SUBDIVS * BOX_HEIGHT - BOX_HEIGHT / 2
+    );
+    float density = compute_density(pos);
+    // printf("max density: %f, average density: %f\n", max_density, average_density);
+    // printf("%f \n", density);
+    float pressure = compute_pressure(density);
+
+    float highest_pressure = compute_pressure(max_density);
+
+    uint8_t color[] = {0, 0, 0, 255};
+    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, color);
+   
+    if(pressure > 0) {
+        color[0] = (uint8_t)(255 * pressure / highest_pressure);
+    } else { 
+        color[2] = (uint8_t)(255 * (average_density - density) / average_density);
+    }
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, color);
+
+    // if(density > average_density) {
+        // value = (density - average_density) / average_density;
+        // printf("value: %f\n", value);
+    // } else {
+    //     value = (average_density - density) / average_density;
+    //     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_BLUE, GL_FLOAT, &value);
+    // }
+    
+}
+
+void initializeTexture() {
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Create an empty texture with GL_RED format (grayscale)
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, TEXTURE_SUBDIVS, TEXTURE_SUBDIVS, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXTURE_SUBDIVS, TEXTURE_SUBDIVS, 0, GL_RGBA,  GL_UNSIGNED_INT_8_8_8_8, nullptr);
+}
+
+void updateTexture() {
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Update the texture data based on computePixelValue function
+    for (int y = 0; y < TEXTURE_SUBDIVS; ++y) {
+        for (int x = 0; x < TEXTURE_SUBDIVS; ++x) {
+            // computePixelValue(x, y);
+            render_pressure(x, y);
+        }
+    }
+}
+
+void drawTexturedQuad() {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(-BOX_WIDTH/2.0f, -BOX_HEIGHT/2.0f);
+
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex2f(BOX_WIDTH/2.0f, -BOX_HEIGHT/2.0f);
+
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex2f(BOX_WIDTH/2.0f, BOX_HEIGHT/2.0f);
+
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex2f(-BOX_WIDTH/2.0f, BOX_HEIGHT/2.0f);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+}
+
+void draw_arrow(Vec2 start, Vec2 disp) {
+    disp = disp * 5;
+    Vec2 end = start + disp;
+    static const float theta = 0.3f;
+    static const float scale = 0.2f;
+    
+    Vec2 flap1 = end - disp.rotate(theta) * scale;
+    Vec2 flap2 = end - disp.rotate(-theta) * scale;
+
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glBegin(GL_LINES);
+    glVertex3f(start.x, start.y, 0.0f);
+    glVertex3f(end.x, end.y, 0.0f);
+    glEnd();
+
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glBegin(GL_LINES);
+    glVertex3f(end.x, end.y, 0.0f);
+    glVertex3f(flap1.x, flap1.y, 0.0f);
+    glEnd();
+
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glBegin(GL_LINES);
+    glVertex3f(end.x, end.y, 0.0f);
+    glVertex3f(flap2.x, flap2.y, 0.0f);
+    glEnd();
+}
+
+void update_velocities() {
+    for(int i = 0; i < particles.size(); i++) {
+        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
+        Vec2 disp = particles[i].vel * (0.5 * dt * dt) + particles[i].vel * dt;
+        particles[i].pos = particles[i].pos + disp;
+        particles[i].vel = particles[i].vel + acc * dt;
+    }
+}
+
+void print_vec2(Vec2 v) {
+    printf("(%f, %f)\n", v.x, v.y);
+}
+
+void print_particle(Particle &p) {
+    printf("pos: (%f, %f), vel: (%f, %f)\n", p.pos.x, p.pos.y, p.vel.x, p.vel.y);
+}
+
+int main() {
+    
+    GLFWwindow *window = create_window();
+    framebuffer_size_callback(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
+    tile_particles(particles);
+    initializeTexture();
 
-    // Compile and link the shaders
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
+    float multiplier = 1.179;
+    std::vector<Vec2> samples(TILE_NUMBER * TILE_NUMBER);
+    for(int j = 0; j < TILE_NUMBER; j++)
+        for(int i = 0; i < TILE_NUMBER; i++) {
+            samples[j * TILE_NUMBER + i] = Vec2(
+                multiplier * (i - TILE_NUMBER / 2.0f),
+                multiplier * (j - TILE_NUMBER / 2.0)
+            );
+        }
 
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
+    while (!glfwWindowShouldClose(window)) {
 
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+        glClear(GL_COLOR_BUFFER_BIT);   
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+        glColor3f(1.0f, 1.0f, 1.0f);
 
-    // Define the vertices for a circle
-    const float radius = 0.5f;
-    const int numSegments = 100;
-    float vertices[numSegments * 2];
+        compute_densities();
+        compute_pressures();
+        compute_pressure_grads();
 
-    for (int i = 0; i < numSegments; ++i)
-    {
-        float theta = 2.0f * M_PI * static_cast<float>(i) / static_cast<float>(numSegments);
-        vertices[2 * i] = radius * cos(theta);
-        vertices[2 * i + 1] = radius * sin(theta);
-    }
+        updateTexture();
+        drawTexturedQuad();
 
-    // Create and bind a vertex buffer object (VBO)
-    GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+        for(auto &p: particles)
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
+        
+        // printf("density at (0, 0): %f\n", compute_density(particles, Vec2(0, 0)));
+        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_WIDTH / 2 + EPS, BOX_HEIGHT / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-    glBindVertexArray(VAO);
+        // for(int i = 0; i < TILE_NUMBER * TILE_NUMBER; i++) {
+        //     Vec2 sample = samples[i];
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        //     glColor3f(0.0f, 1.0f, 0.0f);
+        //     renderCircle(sample.x, sample.y, 0.1);
 
-    // Position attribute
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+        //     draw_arrow(sample, compute_density_grad(sample));
+        // }
 
-    // Unbind the VAO and VBO
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+        for(int i = 0; i < TILE_NUMBER * TILE_NUMBER; i++) {
+            Vec2 sample = samples[i];
 
-    // Main rendering loop
-    while (!glfwWindowShouldClose(window))
-    {
-        // Process input events
+            glColor3f(0.0f, 1.0f, 0.0f);
+            renderCircle(sample.x, sample.y, 0.1);
+
+            draw_arrow(sample, compute_pressure_grad(sample));
+        }
+
+        print_vec2(pressure_grads[0]);
+        print_particle(particles[0]);
+        update_velocities();
+
+        glfwSwapBuffers(window);
         glfwPollEvents();
 
-        // Clear the screen
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // Use the shader program
-        glUseProgram(shaderProgram);
-
-        // Bind the VAO
-        glBindVertexArray(VAO);
-
-        // Draw the circle
-        glDrawArrays(GL_LINE_LOOP, 0, numSegments);
-
-        // Unbind the VAO
-        glBindVertexArray(0);
-
-        // Swap the front and back buffers
-        glfwSwapBuffers(window);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
-    // Clean up
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
-
-    // Terminate GLFW
+    glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;
