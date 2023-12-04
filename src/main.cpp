@@ -2,14 +2,18 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
-#include <Particle.h>
 #include <vector>
 #include <random>
 #include <cassert>
 #include <algorithm>
 #include <thread>
 #include <chrono>
-#include <Timer.h>
+#include <array>
+#include <cassert>
+#include <set>
+
+#include "Particle.h"
+#include "Timer.h"
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
@@ -30,6 +34,12 @@
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
+
+const float BLOCK_LEN = SMOOTH_RADIUS;
+const int BLOCKS_X = static_cast<int>(std::ceil(BOX_WIDTH / BLOCK_LEN));
+const int BLOCKS_Y = static_cast<int>(std::ceil(BOX_HEIGHT / BLOCK_LEN));
+
+std::array<std::array<std::vector<Particle>, BLOCKS_Y>, BLOCKS_X> blocks;
 
 // float SMOOTH_RADIUS8 = SMOOTH_RADIUS4 * SMOOTH_RADIUS4;
 // float kernel_volume = M_PI / 4 * SMOOTH_RADIUS8;
@@ -58,6 +68,8 @@ std::vector<Particle> particles_swap(particles.size());
 std::vector<StateDerivative> x_dots_swap(particles.size());
 
 float max_density;
+
+int frame = 0;
 
 void errorCallback(int error, const char *description) {
     std::cerr << "Error: " << description << std::endl;
@@ -165,6 +177,7 @@ void tile_particles(std::vector<Particle> &particles) {
         for(int i = 0; i < PARTICLE_TILE_NUMBER; i++)
         {
             auto &p = particles[PARTICLE_TILE_NUMBER * j + i];
+            p.id = PARTICLE_TILE_NUMBER * j + i;
             p.pos.x = (float)(i - PARTICLE_TILE_NUMBER * 0.5) / PARTICLE_TILE_NUMBER * OCCUPANCY * BOX_WIDTH;
             p.pos.y = (float)(j - PARTICLE_TILE_NUMBER * 0.5) / PARTICLE_TILE_NUMBER * OCCUPANCY * BOX_HEIGHT;
         }
@@ -175,8 +188,6 @@ void tile_particles(std::vector<Particle> &particles) {
 //     float influence = std::max(0.0f, SMOOTH_RADIUS2 - dist2);
 //     return influence * influence * influence * normalizer;
 // }
-
-// FIX THESE
 
 float smoothing_kernal(Vec2 disp) {
     float dist = sqrt(disp.norm2());
@@ -206,12 +217,94 @@ Vec2 smoothing_kernal_grad(Vec2 disp) {
     return Vec2(x, y);
 }
 
+
+std::pair<int, int> get_block(Vec2 pos) {
+    int x = (pos.x + BOX_WIDTH / 2) / BLOCK_LEN;
+    int y = (pos.y + BOX_HEIGHT / 2) / BLOCK_LEN;
+    x = std::min(x, BLOCKS_X - 1);
+    y = std::min(y, BLOCKS_Y - 1);
+    return { x, y };
+}
+
+void distribute() {
+    for(int i = 0; i < BLOCKS_X; i++) 
+        for(int j = 0; j < BLOCKS_Y; j++)
+            blocks[i][j].clear();
+    for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
+        auto coords = get_block(p.pos);
+        blocks[coords.first][coords.second].push_back(p);
+    }
+}
+
+void sanity_check_blocks() {
+    int sum = 0;
+    for(int i = 0; i < BLOCKS_X; i++) 
+        for(int j = 0; j < BLOCKS_Y; j++) {
+            sum += blocks[i][j].size();
+            for(auto &p: blocks[i][j]) {
+                auto coords = get_block(p.pos);
+                assert(i == coords.first && j == coords.second);
+            }
+        }
+    printf("num particle: %d\n", sum);
+}
+
 float compute_density(Vec2 pos) {
+    auto coords = get_block(pos);
+    int x = coords.first, y = coords.second;
+
+    // float density = 0;
+
+    // for(int i = x - 1; i <= x + 1; i++)
+    //     for(int j = y - 1; j <= y + 1; j++) {
+    //         if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+    //             continue;
+    //         for(auto &p: blocks[i][j]) {
+    //             Vec2 disp = pos - p.pos;
+    //             density += smoothing_kernal(disp);
+    //         }
+    //     }
+
+    std::set<int> set1;
+    for(int i = x - 1; i <= x + 1; i++)
+        for(int j = y - 1; j <= y + 1; j++) {
+            if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+                continue;
+            for(auto &p: blocks[i][j])
+                set1.insert(p.id);
+        }
+
+    std::set<int> set2;
+
     float density = 0;
+
     for(auto &p: particles) {
         Vec2 disp = pos - p.pos;
         density += smoothing_kernal(disp);
+        auto temp = get_block(p.pos);
+        if(std::abs(temp.first - x) <= 1 && std::abs(temp.second - y) <= 1) {
+            set2.insert(p.id);
+        }
     }
+
+    if(set1 != set2) {
+        printf("frame: %d, %f, %f\n", frame, pos.x, pos.y);
+        for(int i: set1) {
+            printf("%d ", i);
+        }
+        printf("\n");
+
+        for(int i: set2) {
+            printf("%d ", i);
+        }
+        printf("\n");
+        exit(1);
+    }
+
+    // int dummy;
+    // scanf("%d", &dummy);
+
     return density;
 }
 
@@ -326,14 +419,6 @@ void render_pressure(int x, int y) {
     }
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, color);
 
-    // if(density > desired_density) {
-        // value = (density - desired_density) / desired_density;
-        // printf("value: %f\n", value);
-    // } else {
-    //     value = (desired_density - density) / desired_density;
-    //     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_BLUE, GL_FLOAT, &value);
-    // }
-    
 }
 
 void initializeTexture() {
@@ -441,29 +526,16 @@ void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
         
-        // Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
-        // Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0.0f, -10.0f);
-        // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
-        
-        // Vec2 temp1 = p.vel * dt;
-        // Vec2 temp2 = acc * (dt * dt * 1); // 0.9 causes divergence, 1 leads to stability
-        // Vec2 disp = temp1 + temp2;
-
-        // This does not converge 
-        // p.pos = p.pos + x_dots[i].vel * dt;
-        // p.vel = p.vel + x_dots[i].acc * dt;
-
-        // BUT THIS DOES
         p.pos = p.pos + x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5;
         p.vel = p.vel + x_dots[i].acc * dt;
 
-        // disp = disp + (acc * (0.5 * dt * dt));
         clamp_particle(p);
-        
-        // p.vel = pressure_grads[i] * (-1.0 / densities[i]);
-        // p.pos = p.pos + p.vel * dt / 10;
-        // clamp_particle(p);
     }
+}
+
+inline Vec2 compute_acc(int index) {
+    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
+    return pressure_grads[index] * (-1.0 / densities[index]);
 }
 
 void step_ahead() {
@@ -478,7 +550,7 @@ void compute_x_dot() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
         x_dots[i].vel = p.vel;
-        x_dots[i].acc = pressure_grads[i] * (-1.0 / densities[i]);
+        x_dots[i].acc = compute_acc(i);
     }
 }
 
@@ -487,10 +559,7 @@ void increment_x_dot(float cur_weight) {
         Particle &p = particles[i];
         StateDerivative s;
         s.vel = p.vel;
-        s.acc = pressure_grads[i] * (-1.0 / densities[i]);
-        
-        
-        // x_dots[i].vel = (s.vel * cur_weight) + x_dots[i].vel * (1 - cur_weight); // WRONG
+        s.acc = compute_acc(i);
         x_dots[i].vel = s.vel * cur_weight + x_dots[i].vel * (1 - cur_weight);
         x_dots[i].acc = s.acc * cur_weight + x_dots[i].acc * (1 - cur_weight);
     }
@@ -509,6 +578,8 @@ void report_time(Timer &t, const char *str) {
 }
 
 int main() {
+
+    printf("BLOCK_X: %d, BLOCK_Y: %d\n", BLOCKS_X, BLOCKS_Y);
     
     GLFWwindow *window = create_window();
     framebuffer_size_callback(window, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -527,11 +598,14 @@ int main() {
             );
         }
 
-    int frame = 0;
+    
 
     while (!glfwWindowShouldClose(window)) {
 
         frame++;
+
+        distribute();
+        // sanity_check_blocks();
 
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
@@ -570,21 +644,10 @@ int main() {
         update_velocities();
 
         glColor3f(1.0f, 1.0f, 1.0f);
-        // glColor3f(0.0f, 0.0f, 0.0f);
         for(auto &p: particles)
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
         
-        // printf("density at (0, 0): %f\n", compute_density(particles, Vec2(0, 0)));
-        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_WIDTH / 2 + EPS, BOX_HEIGHT / 2 - EPS, BOX_HEIGHT / 2 - EPS);
-
-        // for(int i = 0; i < PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER; i++) {
-        //     Vec2 sample = samples[i];
-
-        //     glColor3f(0.0f, 1.0f, 0.0f);
-        //     renderCircle(sample.x, sample.y, 0.1);
-
-        //     draw_arrow(sample, compute_density_grad(sample));
-        // }
+        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
         // for(int i = 0; i < SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER; i++) {
         //     Vec2 sample = samples[i];
@@ -594,20 +657,6 @@ int main() {
 
         //     draw_arrow(sample, compute_pressure_grad(sample));
         // }
-
-        // print_vec2(pressure_grads[0]);
-        // print_particle(particles[0]);
-
-        // renderCircle(7.200000, -7.300000, 0.05);
-        // renderCircle(7.200000, -7.600000, 0.05);
-        // print_particle(particles[19]);
-        // // printf("%f, %f\n", compute_density(Vec2(7.2, -7.5)), compute_density(Vec2(7.5, -7.7)));
-        // printf("%f, %f\n", 
-        //     compute_pressure(compute_density(Vec2(7.200000, -7.300000))), 
-        //     compute_pressure(compute_density(Vec2(7.200000, -7.600000)))
-        // );
-        // draw_arrow(Vec2(7.200000, -7.300000), compute_pressure_grad(Vec2(7.200000, -7.300000)));
-        // draw_arrow(Vec2(7.200000, -7.600000), compute_pressure_grad(Vec2(7.200000, -7.600000)));
 
         // report_time(time, "everything else");
 
