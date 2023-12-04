@@ -23,7 +23,7 @@
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
-#define PRESSURE_RESPONSE 500.0f
+#define PRESSURE_RESPONSE 200.0f
 
 #define TEXTURE_SUBDIVS 128
 
@@ -253,7 +253,7 @@ Vec2 compute_pressure_grad_particle(int index) {
         if(i == index)
             continue;
         assert(densities[i] > 0);
-        float pressure = (pressures[i] + pressures[index]) / 2;
+        float pressure = (pressures[i] + pressures[index]) * 0.5f;
         Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
         grad = grad + kernel_grad * (pressure / densities[i]);
     }
@@ -445,7 +445,7 @@ void update_velocities() {
         // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
         
         Vec2 temp1 = p.vel * dt;
-        Vec2 temp2 = acc * (dt * dt * 0.9); // 0.9 causes divergence, 1 leads to stability
+        Vec2 temp2 = acc * (dt * dt * 1); // 0.9 causes divergence, 1 leads to stability
         Vec2 disp = temp1 + temp2;
         p.vel = p.vel + acc * dt;
         // disp = disp + (acc * (0.5 * dt * dt));
@@ -504,7 +504,7 @@ int main() {
         report_time(time, "compute pressures");
 
         time.reset();
-        compute_pressure_grads_particle();
+        compute_pressure_grads();
         report_time(time, "compute pressure gradients");
 
         // time.reset();
