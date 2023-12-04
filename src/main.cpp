@@ -19,7 +19,7 @@
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 3.0f
+#define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
@@ -309,10 +309,10 @@ void render_pressure(int x, int y) {
 
     // float highest_pressure = compute_pressure(max_density);
     // printf("%f, %f, %f\n", desired_density, max_density, highest_pressure);
-    float highest_pressure = 200;
+    float highest_pressure = 1000;
 
-    uint8_t color[] = {255, 255, 255, 255};
     // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, color);
+    uint8_t color[] = {255, 255, 255, 255};
    
     float interp;
     if(pressure > 0) {
@@ -388,7 +388,7 @@ void drawTexturedQuad() {
 }
 
 void draw_arrow(Vec2 start, Vec2 disp) {
-    disp = disp.normalize();
+    // disp = disp.normalize();
     Vec2 end = start + disp;
     static const float theta = 0.3f;
     static const float scale = 0.2f;
@@ -440,14 +440,17 @@ inline void clamp_particle(Particle &p) {
 void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        // Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0, -1.0);
+        
+        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
         // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
-        // p.pos = p.pos + disp;
-        // p.vel = p.vel + acc * dt;
-        // clamp_particle(p);
-        p.vel = pressure_grads[i] * (-1.0 / densities[i]);
-        p.pos = p.pos + p.vel * dt / 10;
+        
+        p.vel = p.vel + acc * dt;
+        p.pos = p.pos + p.vel * dt;
         clamp_particle(p);
+        
+        // p.vel = pressure_grads[i] * (-1.0 / densities[i]);
+        // p.pos = p.pos + p.vel * dt / 10;
+        // clamp_particle(p);
     }
 }
 
@@ -500,14 +503,15 @@ int main() {
         compute_pressure_grads_particle();
         report_time(time, "compute pressure gradients");
 
-        time.reset();
-        updateTexture();
-        drawTexturedQuad();
-        report_time(time, "draw texture");
+        // time.reset();
+        // updateTexture();
+        // drawTexturedQuad();
+        // report_time(time, "draw texture");
 
         time.reset();
 
-        glColor3f(0.0f, 0.0f, 0.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        // glColor3f(0.0f, 0.0f, 0.0f);
         for(auto &p: particles)
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
         
@@ -523,14 +527,14 @@ int main() {
         //     draw_arrow(sample, compute_density_grad(sample));
         // }
 
-        for(int i = 0; i < SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER; i++) {
-            Vec2 sample = samples[i];
+        // for(int i = 0; i < SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER; i++) {
+        //     Vec2 sample = samples[i];
 
-            glColor3f(0.0f, 1.0f, 0.0f);
-            renderCircle(sample.x, sample.y, 0.1);
+        //     glColor3f(0.0f, 1.0f, 0.0f);
+        //     renderCircle(sample.x, sample.y, 0.1);
 
-            draw_arrow(sample, compute_pressure_grad(sample));
-        }
+        //     draw_arrow(sample, compute_pressure_grad(sample));
+        // }
 
         // print_vec2(pressure_grads[0]);
         // print_particle(particles[0]);
