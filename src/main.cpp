@@ -19,10 +19,10 @@
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 2.0f
+#define SMOOTH_RADIUS 3.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 
-#define PRESSURE_RESPONSE 100.0f
+#define PRESSURE_RESPONSE 500.0f
 
 #define TEXTURE_SUBDIVS 50
 
@@ -282,7 +282,9 @@ void render_pressure(int x, int y) {
     // printf("%f \n", density);
     float pressure = compute_pressure(density);
 
-    float highest_pressure = compute_pressure(max_density);
+    // float highest_pressure = compute_pressure(max_density);
+    // printf("%f, %f, %f\n", average_density, max_density, highest_pressure);
+    float highest_pressure = 200;
 
     uint8_t color[] = {255, 255, 255, 255};
     // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, color);
@@ -413,7 +415,7 @@ inline void clamp_particle(Particle &p) {
 void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
+        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0, -1.0);
         Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
         p.pos = p.pos + disp;
         p.vel = p.vel + acc * dt;
