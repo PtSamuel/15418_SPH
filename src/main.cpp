@@ -19,19 +19,22 @@
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 3.0f
+#define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
+#define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
 #define PRESSURE_RESPONSE 500.0f
 
-#define TEXTURE_SUBDIVS 50
+#define TEXTURE_SUBDIVS 512
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
-float SMOOTH_RADIUS4 = SMOOTH_RADIUS2 * SMOOTH_RADIUS2;
-float SMOOTH_RADIUS8 = SMOOTH_RADIUS4 * SMOOTH_RADIUS4;
-float kernel_volume = M_PI / 4 * SMOOTH_RADIUS8;
+// float SMOOTH_RADIUS8 = SMOOTH_RADIUS4 * SMOOTH_RADIUS4;
+// float kernel_volume = M_PI / 4 * SMOOTH_RADIUS8;
+// float normalizer = 1 / kernel_volume;
+
+float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
@@ -161,26 +164,47 @@ void tile_particles(std::vector<Particle> &particles) {
         }
 }
 
-float smoothing_kernal(float radius2, float dist2) {
-    float influence = std::max(0.0f, radius2 - dist2);
-    return influence * influence * influence * normalizer;
+// float smoothing_kernal(Vec2 disp) {
+//     float dist2 = disp.norm2();
+//     float influence = std::max(0.0f, SMOOTH_RADIUS2 - dist2);
+//     return influence * influence * influence * normalizer;
+// }
+
+// FIX THESE
+
+float smoothing_kernal(Vec2 disp) {
+    float dist = sqrt(disp.norm2());
+    float offset = std::max(0.0f, SMOOTH_RADIUS - dist);
+    return offset * offset * normalizer;
 }
 
-Vec2 smoothing_kernal_grad(float radius2, Vec2 disp) {
+// Vec2 smoothing_kernal_grad(Vec2 disp) {
+//     float dist2 = disp.norm2();
+//     if(dist2 > SMOOTH_RADIUS2)
+//         return Vec2(0, 0);
+    
+//     float x = -3 * (SMOOTH_RADIUS2 - dist2) * (SMOOTH_RADIUS2 - dist2) * disp.x * normalizer;
+//     float y = -3 * (SMOOTH_RADIUS2 - dist2) * (SMOOTH_RADIUS2 - dist2) * disp.y * normalizer;
+//     return Vec2(x, y);
+// }
+
+Vec2 smoothing_kernal_grad(Vec2 disp) {
     float dist2 = disp.norm2();
-    if(dist2 > radius2)
+    if(dist2 == 0.0f || dist2 > SMOOTH_RADIUS2)
         return Vec2(0, 0);
     
-    float x = -3 * (radius2 - dist2) * (radius2 - dist2) * disp.x * normalizer;
-    float y = -3 * (radius2 - dist2) * (radius2 - dist2) * disp.y * normalizer;
+    float dist = sqrt(dist2);
+
+    float x = -2 * (SMOOTH_RADIUS - dist) * disp.x / dist * normalizer;
+    float y = -2 * (SMOOTH_RADIUS - dist) * disp.y / dist * normalizer;
     return Vec2(x, y);
 }
 
 float compute_density(Vec2 pos) {
     float density = 0;
     for(auto &p: particles) {
-        float dist2 = pos.dist2(p.pos);
-        density += smoothing_kernal(SMOOTH_RADIUS2, dist2);
+        Vec2 disp = pos - p.pos;
+        density += smoothing_kernal(disp);
     }
     return density;
 }
@@ -210,7 +234,7 @@ Vec2 compute_pressure_grad(Vec2 pos) {
     for(int i = 0; i < particles.size(); i++) {
         assert(densities[i] > 0);
 
-        Vec2 kernel_grad = smoothing_kernal_grad(SMOOTH_RADIUS2, pos - particles[i].pos);
+        Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
         grad = grad + kernel_grad * (pressures[i] / densities[i]);
     }
     return grad;
@@ -229,7 +253,7 @@ Vec2 compute_pressure_grad_particle(int index) {
             continue;
         assert(densities[i] > 0);
         float pressure = (pressures[i] + pressures[index]) / 2;
-        Vec2 kernel_grad = smoothing_kernal_grad(SMOOTH_RADIUS2, pos - particles[i].pos);
+        Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
         grad = grad + kernel_grad * (pressure / densities[i]);
     }
     return grad;
@@ -245,7 +269,7 @@ Vec2 compute_density_grad(Vec2 pos) {
     Vec2 grad = Vec2(0, 0);
     for(auto &p: particles) {
         Vec2 disp = pos - p.pos;
-        grad = grad + smoothing_kernal_grad(SMOOTH_RADIUS2, disp);
+        grad = grad + smoothing_kernal_grad(disp);
     }
     return grad;
 }
@@ -506,14 +530,24 @@ int main() {
 
         // print_vec2(pressure_grads[0]);
         // print_particle(particles[0]);
-        update_velocities();
+        // update_velocities();
+
+        renderCircle(7.200000, -7.300000, 0.05);
+        renderCircle(7.400000, -7.500000, 0.05);
+        print_particle(particles[19]);
+        // printf("%f, %f\n", compute_density(Vec2(7.2, -7.5)), compute_density(Vec2(7.5, -7.7)));
+        printf("%f, %f\n", 
+            compute_pressure(compute_density(Vec2(7.200000, -7.300000))), 
+            compute_pressure(compute_density(Vec2(7.400000, -7.500000)))
+        );
+
 
         report_time(time, "everything else");
 
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     glfwDestroyWindow(window);
