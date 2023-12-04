@@ -48,11 +48,18 @@ static std::uniform_real_distribution<float> distribution(0, 1);
 std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER);
 std::vector<Vec2> kernel_grads(particles.size());
 std::vector<float> densities(particles.size());
-float max_density;
 std::vector<Vec2> density_grads(particles.size());
-
 std::vector<float> pressures(particles.size());
 std::vector<Vec2> pressure_grads(particles.size());
+
+std::vector<Particle> particles_swap(particles.size());
+std::vector<Vec2> kernel_grads_swap(particles.size());
+std::vector<float> densities_swap(particles.size());
+std::vector<Vec2> density_grads_swap(particles.size());
+std::vector<float> pressures_swap(particles.size());
+std::vector<Vec2> pressure_grads_swap(particles.size());
+
+float max_density;
 
 void errorCallback(int error, const char *description) {
     std::cerr << "Error: " << description << std::endl;
@@ -458,6 +465,14 @@ void update_velocities() {
     }
 }
 
+void step_ahead() {
+    for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
+        particles_swap[i].pos = p.pos + p.vel * dt;
+        particles_swap[i].vel = p.vel;
+    }
+}
+
 void print_vec2(Vec2 v) {
     printf("(%f, %f)\n", v.x, v.y);
 }
@@ -491,8 +506,10 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
 
-        glClear(GL_COLOR_BUFFER_BIT);   
+        step_ahead();
+        particles.swap(particles_swap);
 
+        glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
 
         Timer time;
@@ -513,6 +530,9 @@ int main() {
         // report_time(time, "draw texture");
 
         time.reset();
+
+        particles.swap(particles_swap);
+        update_velocities();
 
         glColor3f(1.0f, 1.0f, 1.0f);
         // glColor3f(0.0f, 0.0f, 0.0f);
@@ -542,7 +562,6 @@ int main() {
 
         // print_vec2(pressure_grads[0]);
         // print_particle(particles[0]);
-        update_velocities();
 
         // renderCircle(7.200000, -7.300000, 0.05);
         // renderCircle(7.200000, -7.600000, 0.05);
