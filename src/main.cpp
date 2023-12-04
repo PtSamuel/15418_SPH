@@ -442,10 +442,10 @@ void update_velocities() {
         Particle &p = particles[i];
         
         Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
-        // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
+        Vec2 disp = acc * (0.5 * dt * dt) + p.vel * dt;
         
+        p.pos = p.pos + disp;
         p.vel = p.vel + acc * dt;
-        p.pos = p.pos + p.vel * dt;
         clamp_particle(p);
         
         // p.vel = pressure_grads[i] * (-1.0 / densities[i]);
