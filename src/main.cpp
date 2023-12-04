@@ -451,8 +451,15 @@ void update_velocities() {
         // Vec2 temp1 = p.vel * dt;
         // Vec2 temp2 = acc * (dt * dt * 1); // 0.9 causes divergence, 1 leads to stability
         // Vec2 disp = temp1 + temp2;
-        p.pos = p.pos + x_dots[i].vel * dt;
+
+        // This does not converge 
+        // p.pos = p.pos + x_dots[i].vel * dt;
+        // p.vel = p.vel + x_dots[i].acc * dt;
+
+        // BUT THIS DOES
+        p.pos = p.pos + x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5;
         p.vel = p.vel + x_dots[i].acc * dt;
+
         // disp = disp + (acc * (0.5 * dt * dt));
         clamp_particle(p);
         
