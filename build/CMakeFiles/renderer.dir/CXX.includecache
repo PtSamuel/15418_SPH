@@ -7,6 +7,10 @@
 #IncludeRegexTransform: 
 
 ../src/include/Particle.h
+cassert
+-
+cmath
+-
 
 /home/johnsmith/Desktop/15418_project/src/main.cpp
 GL/glew.h
