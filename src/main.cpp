@@ -19,13 +19,13 @@
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 1.0f
+#define SMOOTH_RADIUS 3.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
 #define PRESSURE_RESPONSE 500.0f
 
-#define TEXTURE_SUBDIVS 512
+#define TEXTURE_SUBDIVS 128
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
@@ -38,6 +38,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
+float desired_density = average_density / 10;
 
 const float dt = 0.01;
 
@@ -221,7 +222,7 @@ void compute_densities() {
 }
 
 float compute_pressure(float density) {
-    return PRESSURE_RESPONSE * (density - average_density);
+    return PRESSURE_RESPONSE * (density - desired_density);
 }
 
 void compute_pressures() {
@@ -302,12 +303,12 @@ void render_pressure(int x, int y) {
         (float)y / TEXTURE_SUBDIVS * BOX_HEIGHT - BOX_HEIGHT / 2
     );
     float density = compute_density(pos);
-    // printf("max density: %f, average density: %f\n", max_density, average_density);
+    // printf("max density: %f, average density: %f\n", max_density, desired_density);
     // printf("%f \n", density);
     float pressure = compute_pressure(density);
 
     // float highest_pressure = compute_pressure(max_density);
-    // printf("%f, %f, %f\n", average_density, max_density, highest_pressure);
+    // printf("%f, %f, %f\n", desired_density, max_density, highest_pressure);
     float highest_pressure = 200;
 
     uint8_t color[] = {255, 255, 255, 255};
@@ -319,17 +320,17 @@ void render_pressure(int x, int y) {
         color[1] = interp;
         color[2] = interp;
     } else { 
-        interp = (uint8_t)(255 * (1 - (average_density - density) / average_density));
+        interp = (uint8_t)(255 * (1 - (desired_density - density) / desired_density));
         color[0] = interp;
         color[1] = interp;
     }
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, color);
 
-    // if(density > average_density) {
-        // value = (density - average_density) / average_density;
+    // if(density > desired_density) {
+        // value = (density - desired_density) / desired_density;
         // printf("value: %f\n", value);
     // } else {
-    //     value = (average_density - density) / average_density;
+    //     value = (desired_density - density) / desired_density;
     //     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_BLUE, GL_FLOAT, &value);
     // }
     
@@ -439,10 +440,13 @@ inline void clamp_particle(Particle &p) {
 void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0, -1.0);
-        Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
-        p.pos = p.pos + disp;
-        p.vel = p.vel + acc * dt;
+        // Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0, -1.0);
+        // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
+        // p.pos = p.pos + disp;
+        // p.vel = p.vel + acc * dt;
+        // clamp_particle(p);
+        p.vel = pressure_grads[i] * (-1.0 / densities[i]);
+        p.pos = p.pos + p.vel * dt / 10;
         clamp_particle(p);
     }
 }
@@ -530,24 +534,25 @@ int main() {
 
         // print_vec2(pressure_grads[0]);
         // print_particle(particles[0]);
-        // update_velocities();
+        update_velocities();
 
-        renderCircle(7.200000, -7.300000, 0.05);
-        renderCircle(7.400000, -7.500000, 0.05);
-        print_particle(particles[19]);
-        // printf("%f, %f\n", compute_density(Vec2(7.2, -7.5)), compute_density(Vec2(7.5, -7.7)));
-        printf("%f, %f\n", 
-            compute_pressure(compute_density(Vec2(7.200000, -7.300000))), 
-            compute_pressure(compute_density(Vec2(7.400000, -7.500000)))
-        );
-
+        // renderCircle(7.200000, -7.300000, 0.05);
+        // renderCircle(7.200000, -7.600000, 0.05);
+        // print_particle(particles[19]);
+        // // printf("%f, %f\n", compute_density(Vec2(7.2, -7.5)), compute_density(Vec2(7.5, -7.7)));
+        // printf("%f, %f\n", 
+        //     compute_pressure(compute_density(Vec2(7.200000, -7.300000))), 
+        //     compute_pressure(compute_density(Vec2(7.200000, -7.600000)))
+        // );
+        // draw_arrow(Vec2(7.200000, -7.300000), compute_pressure_grad(Vec2(7.200000, -7.300000)));
+        // draw_arrow(Vec2(7.200000, -7.600000), compute_pressure_grad(Vec2(7.200000, -7.600000)));
 
         report_time(time, "everything else");
 
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     glfwDestroyWindow(window);
