@@ -23,7 +23,7 @@
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
-#define PRESSURE_RESPONSE 100.0f
+#define PRESSURE_RESPONSE 200.0f
 
 #define TEXTURE_SUBDIVS 128
 
@@ -448,7 +448,7 @@ void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
         
-        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
+        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0.0f, -10.0f);
         // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
         
         Vec2 temp1 = p.vel * dt;
