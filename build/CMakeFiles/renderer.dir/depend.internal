@@ -3,4 +3,5 @@
 
 CMakeFiles/renderer.dir/src/main.cpp.o
  ../src/include/Particle.h
+ ../src/include/Timer.h
  /home/johnsmith/Desktop/15418_project/src/main.cpp

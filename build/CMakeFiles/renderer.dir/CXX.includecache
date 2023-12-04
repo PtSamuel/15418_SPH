@@ -12,6 +12,10 @@ cassert
 cmath
 -
 
+../src/include/Timer.h
+chrono
+-
+
 /home/johnsmith/Desktop/15418_project/src/main.cpp
 GL/glew.h
 -
@@ -34,5 +38,7 @@ algorithm
 thread
 -
 chrono
+-
+Timer.h
 -
 

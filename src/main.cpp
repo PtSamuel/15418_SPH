@@ -9,11 +9,12 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
-
+#include <Timer.h>
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define TILE_NUMBER 10
+#define PARTICLE_TILE_NUMBER 50
+#define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
@@ -23,7 +24,7 @@
 
 #define PRESSURE_RESPONSE 100.0f
 
-#define TEXTURE_SUBDIVS 100
+#define TEXTURE_SUBDIVS 10
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
@@ -33,14 +34,14 @@ float SMOOTH_RADIUS8 = SMOOTH_RADIUS4 * SMOOTH_RADIUS4;
 float kernel_volume = M_PI / 4 * SMOOTH_RADIUS8;
 float normalizer = 1 / kernel_volume;
 
-float average_density = TILE_NUMBER * TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
+float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
 
 const float dt = 0.01;
 
 static std::mt19937 gen(114514);
 static std::uniform_real_distribution<float> distribution(0, 1);
 
-std::vector<Particle> particles(TILE_NUMBER * TILE_NUMBER);
+std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER);
 std::vector<float> densities(particles.size());
 float max_density;
 std::vector<Vec2> density_grads(particles.size());
@@ -149,13 +150,13 @@ void init_particles(std::vector<Particle> &particles) {
 }
 
 void tile_particles(std::vector<Particle> &particles) {
-    assert(particles.size() == TILE_NUMBER* TILE_NUMBER);
-    for(int j = 0; j < TILE_NUMBER; j++)
-        for(int i = 0; i < TILE_NUMBER; i++)
+    assert(particles.size() == PARTICLE_TILE_NUMBER* PARTICLE_TILE_NUMBER);
+    for(int j = 0; j < PARTICLE_TILE_NUMBER; j++)
+        for(int i = 0; i < PARTICLE_TILE_NUMBER; i++)
         {
-            auto &p = particles[TILE_NUMBER * j + i];
-            p.pos.x = (float)(i - TILE_NUMBER * 0.5) / TILE_NUMBER * OCCUPANCY * BOX_WIDTH;
-            p.pos.y = (float)(j - TILE_NUMBER * 0.5) / TILE_NUMBER * OCCUPANCY * BOX_HEIGHT;
+            auto &p = particles[PARTICLE_TILE_NUMBER * j + i];
+            p.pos.x = (float)(i - PARTICLE_TILE_NUMBER * 0.5) / PARTICLE_TILE_NUMBER * OCCUPANCY * BOX_WIDTH;
+            p.pos.y = (float)(j - PARTICLE_TILE_NUMBER * 0.5) / PARTICLE_TILE_NUMBER * OCCUPANCY * BOX_HEIGHT;
         }
 }
 
@@ -207,6 +208,7 @@ Vec2 compute_pressure_grad(Vec2 pos) {
     Vec2 grad = Vec2(0.0f, 0.0f);
     for(int i = 0; i < particles.size(); i++) {
         assert(densities[i] > 0);
+
         Vec2 kernel_grad = smoothing_kernal_grad(SMOOTH_RADIUS2, pos - particles[i].pos);
         grad = grad + kernel_grad * (pressures[i] / densities[i]);
     }
@@ -217,6 +219,26 @@ void compute_pressure_grads() {
     for(int i = 0; i < particles.size(); i++)
         pressure_grads[i] = compute_pressure_grad(particles[i].pos);
 }
+
+Vec2 compute_pressure_grad_particle(int index) {
+    Vec2 grad = Vec2(0.0f, 0.0f);
+    Vec2 pos = particles[index].pos;
+    for(int i = 0; i < particles.size(); i++) {
+        if(i == index)
+            continue;
+        assert(densities[i] > 0);
+        float pressure = (pressures[i] + pressures[index]) / 2;
+        Vec2 kernel_grad = smoothing_kernal_grad(SMOOTH_RADIUS2, pos - particles[i].pos);
+        grad = grad + kernel_grad * (pressure / densities[i]);
+    }
+    return grad;
+}
+
+void compute_pressure_grads_particle() {
+    for(int i = 0; i < particles.size(); i++)
+        pressure_grads[i] = compute_pressure_grad_particle(i);
+}
+
 
 Vec2 compute_density_grad(Vec2 pos) {
     Vec2 grad = Vec2(0, 0);
@@ -261,13 +283,18 @@ void render_pressure(int x, int y) {
 
     float highest_pressure = compute_pressure(max_density);
 
-    uint8_t color[] = {0, 0, 0, 255};
+    uint8_t color[] = {255, 255, 255, 255};
     // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, color);
    
+    float interp;
     if(pressure > 0) {
-        color[0] = (uint8_t)(255 * pressure / highest_pressure);
+        interp = (uint8_t)(255 * (1 - pressure / highest_pressure));
+        color[1] = interp;
+        color[2] = interp;
     } else { 
-        color[2] = (uint8_t)(255 * (average_density - density) / average_density);
+        interp = (uint8_t)(255 * (1 - (average_density - density) / average_density));
+        color[0] = interp;
+        color[1] = interp;
     }
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, color);
 
@@ -288,8 +315,11 @@ void initializeTexture() {
     // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Create an empty texture with GL_RED format (grayscale)
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, TEXTURE_SUBDIVS, TEXTURE_SUBDIVS, 0, GL_RED, GL_FLOAT, nullptr);
@@ -330,7 +360,7 @@ void drawTexturedQuad() {
 }
 
 void draw_arrow(Vec2 start, Vec2 disp) {
-    disp = disp * 5;
+    disp = disp.normalize();
     Vec2 end = start + disp;
     static const float theta = 0.3f;
     static const float scale = 0.2f;
@@ -398,6 +428,10 @@ void print_particle(Particle &p) {
     printf("pos: (%f, %f), vel: (%f, %f)\n", p.pos.x, p.pos.y, p.vel.x, p.vel.y);
 }
 
+void report_time(Timer &t, const char *str) {
+    printf("%s took %f seconds\n", str, t.time());
+}
+
 int main() {
     
     GLFWwindow *window = create_window();
@@ -408,12 +442,12 @@ int main() {
     initializeTexture();
 
     float multiplier = 1.179;
-    std::vector<Vec2> samples(TILE_NUMBER * TILE_NUMBER);
-    for(int j = 0; j < TILE_NUMBER; j++)
-        for(int i = 0; i < TILE_NUMBER; i++) {
-            samples[j * TILE_NUMBER + i] = Vec2(
-                multiplier * (i - TILE_NUMBER / 2.0f),
-                multiplier * (j - TILE_NUMBER / 2.0)
+    std::vector<Vec2> samples(SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER);
+    for(int j = 0; j < SAMPLE_TILE_NUMBER; j++)
+        for(int i = 0; i < SAMPLE_TILE_NUMBER; i++) {
+            samples[j * SAMPLE_TILE_NUMBER + i] = Vec2(
+                multiplier * (i - SAMPLE_TILE_NUMBER / 2.0f),
+                multiplier * (j - SAMPLE_TILE_NUMBER / 2.0)
             );
         }
 
@@ -423,20 +457,33 @@ int main() {
 
         glColor3f(1.0f, 1.0f, 1.0f);
 
+        Timer time;
         compute_densities();
-        compute_pressures();
-        compute_pressure_grads();
+        report_time(time, "compute densities");
 
+        time.reset();
+        compute_pressures();
+        report_time(time, "compute pressures");
+
+        time.reset();
+        compute_pressure_grads_particle();
+        report_time(time, "compute pressure gradients");
+
+        time.reset();
         updateTexture();
         drawTexturedQuad();
+        report_time(time, "draw texture");
 
+        time.reset();
+
+        glColor3f(0.0f, 0.0f, 0.0f);
         for(auto &p: particles)
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
         
         // printf("density at (0, 0): %f\n", compute_density(particles, Vec2(0, 0)));
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_WIDTH / 2 + EPS, BOX_HEIGHT / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        // for(int i = 0; i < TILE_NUMBER * TILE_NUMBER; i++) {
+        // for(int i = 0; i < PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER; i++) {
         //     Vec2 sample = samples[i];
 
         //     glColor3f(0.0f, 1.0f, 0.0f);
@@ -445,7 +492,7 @@ int main() {
         //     draw_arrow(sample, compute_density_grad(sample));
         // }
 
-        for(int i = 0; i < TILE_NUMBER * TILE_NUMBER; i++) {
+        for(int i = 0; i < SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER; i++) {
             Vec2 sample = samples[i];
 
             glColor3f(0.0f, 1.0f, 0.0f);
@@ -457,6 +504,8 @@ int main() {
         // print_vec2(pressure_grads[0]);
         // print_particle(particles[0]);
         update_velocities();
+
+        report_time(time, "everything else");
 
         glfwSwapBuffers(window);
         glfwPollEvents();

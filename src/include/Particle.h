@@ -1,3 +1,6 @@
+#include <cassert>
+#include <cmath>
+
 struct Vec2 {
     float x;
     float y;
@@ -8,6 +11,12 @@ struct Vec2 {
     float norm2() {
         return x * x + y * y;
     }
+    Vec2 normalize() {
+        float norm = sqrt(norm2());
+        if(norm == 0.0f) {
+            return Vec2(0.0f, 0.0f);
+        } else return *this / norm;
+    }
     Vec2 operator+(Vec2 v) {
         return Vec2(x + v.x, y + v.y);
     }
@@ -16,6 +25,10 @@ struct Vec2 {
     }
     Vec2 operator*(float a) {
         return Vec2(x * a, y * a);
+    }
+    Vec2 operator/(float a) {
+        assert(a != 0.0f);
+        return Vec2(x / a, y / a);
     }
     Vec2 rotate(float theta) {
         double rot2d[2][2] = {
