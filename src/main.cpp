@@ -13,7 +13,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 50
+#define PARTICLE_TILE_NUMBER 20
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8
 #define BOX_WIDTH 20.0f
@@ -24,7 +24,7 @@
 
 #define PRESSURE_RESPONSE 100.0f
 
-#define TEXTURE_SUBDIVS 10
+#define TEXTURE_SUBDIVS 50
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
@@ -42,6 +42,7 @@ static std::mt19937 gen(114514);
 static std::uniform_real_distribution<float> distribution(0, 1);
 
 std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER);
+std::vector<Vec2> kernel_grads(particles.size());
 std::vector<float> densities(particles.size());
 float max_density;
 std::vector<Vec2> density_grads(particles.size());
