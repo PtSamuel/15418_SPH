@@ -442,10 +442,14 @@ void update_velocities() {
         Particle &p = particles[i];
         
         Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
-        Vec2 disp = acc * (0.5 * dt * dt) + p.vel * dt;
+        // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
         
-        p.pos = p.pos + disp;
+        Vec2 temp1 = p.vel * dt;
+        Vec2 temp2 = acc * (dt * dt * 0.9); // 0.9 causes divergence, 1 leads to stability
+        Vec2 disp = temp1 + temp2;
         p.vel = p.vel + acc * dt;
+        // disp = disp + (acc * (0.5 * dt * dt));
+        p.pos = p.pos + disp;
         clamp_particle(p);
         
         // p.vel = pressure_grads[i] * (-1.0 / densities[i]);
