@@ -55,9 +55,6 @@ std::vector<StateDerivative> x_dots(particles.size());
 
 std::vector<Particle> particles_swap(particles.size());
 
-std::vector<float> densities_swap(particles.size());
-std::vector<float> pressures_swap(particles.size());
-std::vector<Vec2> pressure_grads_swap(particles.size());
 std::vector<StateDerivative> x_dots_swap(particles.size());
 
 float max_density;
@@ -480,15 +477,22 @@ void step_ahead() {
 void compute_x_dot() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        x_dots_swap[i].vel = p.vel;
-        x_dots_swap[i].acc = pressure_grads[i] * (-1.0 / densities[i]);
+        x_dots[i].vel = p.vel;
+        x_dots[i].acc = pressure_grads[i] * (-1.0 / densities[i]);
     }
 }
 
-void add_x_dots() {
-    for(int i = 0; i < pressure_grads.size(); i++) {
-        x_dots[i].vel = x_dots[i].vel * 0.75 + x_dots_swap[i].vel * 0.25;
-        x_dots[i].acc = x_dots[i].acc * 0.75 + x_dots_swap[i].acc * 0.25;
+void increment_x_dot(float cur_weight) {
+    for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
+        StateDerivative s;
+        s.vel = p.vel;
+        s.acc = pressure_grads[i] * (-1.0 / densities[i]);
+        
+        
+        // x_dots[i].vel = (s.vel * cur_weight) + x_dots[i].vel * (1 - cur_weight); // WRONG
+        x_dots[i].vel = s.vel * cur_weight + x_dots[i].vel * (1 - cur_weight);
+        x_dots[i].acc = s.acc * cur_weight + x_dots[i].acc * (1 - cur_weight);
     }
 }
 
@@ -523,22 +527,26 @@ int main() {
             );
         }
 
+    int frame = 0;
+
     while (!glfwWindowShouldClose(window)) {
+
+        frame++;
 
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
 
         Timer time;
         compute_densities();
-        report_time(time, "compute densities");
+        // report_time(time, "compute densities");
 
         time.reset();
         compute_pressures();
-        report_time(time, "compute pressures");
+        // report_time(time, "compute pressures");
 
         time.reset();
         compute_pressure_grads_particle();
-        report_time(time, "compute pressure gradients");
+        // report_time(time, "compute pressure gradients");
 
         // time.reset();
         // updateTexture();
@@ -548,24 +556,15 @@ int main() {
         time.reset();
 
         compute_x_dot();
-        x_dots.swap(x_dots_swap);
 
         step_ahead();
         particles.swap(particles_swap);
 
-        // densities.swap(densities_swap);
-        // pressures.swap(pressures_swap);
-        // pressure_grads.swap(pressure_grads_swap);
-        
         compute_densities();
         compute_pressures();
         compute_pressure_grads_particle();
 
-        compute_x_dot();
-        x_dots.swap(x_dots_swap);
-
-        add_x_dots();
-
+        increment_x_dot(0.75);
         particles.swap(particles_swap);
 
         update_velocities();
@@ -610,7 +609,11 @@ int main() {
         // draw_arrow(Vec2(7.200000, -7.300000), compute_pressure_grad(Vec2(7.200000, -7.300000)));
         // draw_arrow(Vec2(7.200000, -7.600000), compute_pressure_grad(Vec2(7.200000, -7.600000)));
 
-        report_time(time, "everything else");
+        // report_time(time, "everything else");
+
+        if(frame == 200) {
+            print_particle(particles[0]);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
