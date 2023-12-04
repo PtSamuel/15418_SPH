@@ -19,11 +19,11 @@
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 1.0f
+#define SMOOTH_RADIUS 2.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
-#define PRESSURE_RESPONSE 200.0f
+#define PRESSURE_RESPONSE 100.0f
 
 #define TEXTURE_SUBDIVS 128
 
@@ -38,7 +38,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-float desired_density = average_density / 10;
+float desired_density = average_density;
 
 const float dt = 0.01;
 
@@ -504,7 +504,7 @@ int main() {
         report_time(time, "compute pressures");
 
         time.reset();
-        compute_pressure_grads();
+        compute_pressure_grads_particle();
         report_time(time, "compute pressure gradients");
 
         // time.reset();
