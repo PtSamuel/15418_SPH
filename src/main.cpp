@@ -22,6 +22,7 @@
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
+#define TWO_THIRDS 2.0f / 3.0f
 
 #define PRESSURE_RESPONSE 200.0f
 
@@ -46,18 +47,18 @@ static std::mt19937 gen(114514);
 static std::uniform_real_distribution<float> distribution(0, 1);
 
 std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER);
-std::vector<Vec2> kernel_grads(particles.size());
+
 std::vector<float> densities(particles.size());
-std::vector<Vec2> density_grads(particles.size());
 std::vector<float> pressures(particles.size());
 std::vector<Vec2> pressure_grads(particles.size());
+std::vector<StateDerivative> x_dots(particles.size());
 
 std::vector<Particle> particles_swap(particles.size());
-std::vector<Vec2> kernel_grads_swap(particles.size());
+
 std::vector<float> densities_swap(particles.size());
-std::vector<Vec2> density_grads_swap(particles.size());
 std::vector<float> pressures_swap(particles.size());
 std::vector<Vec2> pressure_grads_swap(particles.size());
+std::vector<StateDerivative> x_dots_swap(particles.size());
 
 float max_density;
 
@@ -282,11 +283,6 @@ Vec2 compute_density_grad(Vec2 pos) {
     return grad;
 }
 
-void compute_density_grads() {
-    for(int i = 0; i < particles.size(); i++)
-        density_grads[i] = compute_density_grad(particles[i].pos);
-}
-
 GLuint textureID;  // OpenGL texture ID
 
 void computePixelValue(int x, int y) {
@@ -448,15 +444,16 @@ void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
         
-        Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0.0f, -10.0f);
+        // Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]);
+        // Vec2 acc = pressure_grads[i] * (-1.0 / densities[i]) + Vec2(0.0f, -10.0f);
         // Vec2 disp = p.vel * (0.5 * dt * dt) + p.vel * dt;
         
-        Vec2 temp1 = p.vel * dt;
-        Vec2 temp2 = acc * (dt * dt * 1); // 0.9 causes divergence, 1 leads to stability
-        Vec2 disp = temp1 + temp2;
-        p.vel = p.vel + acc * dt;
+        // Vec2 temp1 = p.vel * dt;
+        // Vec2 temp2 = acc * (dt * dt * 1); // 0.9 causes divergence, 1 leads to stability
+        // Vec2 disp = temp1 + temp2;
+        p.pos = p.pos + x_dots[i].vel * dt;
+        p.vel = p.vel + x_dots[i].acc * dt;
         // disp = disp + (acc * (0.5 * dt * dt));
-        p.pos = p.pos + disp;
         clamp_particle(p);
         
         // p.vel = pressure_grads[i] * (-1.0 / densities[i]);
@@ -468,8 +465,23 @@ void update_velocities() {
 void step_ahead() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        particles_swap[i].pos = p.pos + p.vel * dt;
-        particles_swap[i].vel = p.vel;
+        particles_swap[i].pos = p.pos + x_dots[i].vel * dt * TWO_THIRDS;
+        particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
+    }
+}
+
+void compute_x_dot() {
+    for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
+        x_dots_swap[i].vel = p.vel;
+        x_dots_swap[i].acc = pressure_grads[i] * (-1.0 / densities[i]);
+    }
+}
+
+void add_x_dots() {
+    for(int i = 0; i < pressure_grads.size(); i++) {
+        x_dots[i].vel = x_dots[i].vel * 0.75 + x_dots_swap[i].vel * 0.25;
+        x_dots[i].acc = x_dots[i].acc * 0.75 + x_dots_swap[i].acc * 0.25;
     }
 }
 
@@ -506,9 +518,6 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
 
-        step_ahead();
-        particles.swap(particles_swap);
-
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
 
@@ -531,7 +540,27 @@ int main() {
 
         time.reset();
 
+        compute_x_dot();
+        x_dots.swap(x_dots_swap);
+
+        step_ahead();
         particles.swap(particles_swap);
+
+        // densities.swap(densities_swap);
+        // pressures.swap(pressures_swap);
+        // pressure_grads.swap(pressure_grads_swap);
+        
+        compute_densities();
+        compute_pressures();
+        compute_pressure_grads_particle();
+
+        compute_x_dot();
+        x_dots.swap(x_dots_swap);
+
+        add_x_dots();
+
+        particles.swap(particles_swap);
+
         update_velocities();
 
         glColor3f(1.0f, 1.0f, 1.0f);

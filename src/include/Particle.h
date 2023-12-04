@@ -47,3 +47,8 @@ struct Particle {
     Vec2 pos;
     Vec2 vel;
 };
+
+struct StateDerivative {
+    Vec2 vel;
+    Vec2 acc;
+};
