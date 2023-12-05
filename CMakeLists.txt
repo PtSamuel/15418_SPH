@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+
 add_executable(renderer src/main.cpp)
 
 include_directories("${CMAKE_SOURCE_DIR}/src/include")

@@ -17,18 +17,18 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 20
+#define PARTICLE_TILE_NUMBER 40
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
-#define BOX_HEIGHT 20.0f
+#define BOX_HEIGHT 40.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 1.0f
+#define SMOOTH_RADIUS 1.5f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 #define TWO_THIRDS 2.0f / 3.0f
 
-#define PRESSURE_RESPONSE 200.0f
+#define PRESSURE_RESPONSE 500.0f
 
 #define TEXTURE_SUBDIVS 128
 
@@ -38,6 +38,9 @@ const int WINDOW_HEIGHT = 600;
 const float BLOCK_LEN = SMOOTH_RADIUS;
 const int BLOCKS_X = static_cast<int>(std::ceil(BOX_WIDTH / BLOCK_LEN));
 const int BLOCKS_Y = static_cast<int>(std::ceil(BOX_HEIGHT / BLOCK_LEN));
+
+float momentum = 0.9;
+float running_duration;
 
 std::array<std::array<std::vector<Particle>, BLOCKS_Y>, BLOCKS_X> blocks;
 
@@ -49,12 +52,15 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-float desired_density = average_density;
+float desired_density = average_density * 2;
 
 const float dt = 0.01;
 
 static std::mt19937 gen(114514);
 static std::uniform_real_distribution<float> distribution(0, 1);
+
+float viewport_width;
+float viewport_height;
 
 std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER);
 
@@ -153,9 +159,21 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
     glViewport(bx, by, new_width, new_height);
 
+    float viewport_padding_y = BOX_HEIGHT * 0.1;
+    float viewport_padding_x = BOX_WIDTH / BOX_HEIGHT * viewport_padding_y;
+
+    viewport_width = BOX_WIDTH + 2 * viewport_padding_x;
+    viewport_height = BOX_HEIGHT + 2 * viewport_padding_y;
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-BOX_WIDTH / 2.0, BOX_WIDTH / 2.0, -BOX_HEIGHT / 2.0, BOX_HEIGHT / 2.0, -1.0, 1.0);
+    glOrtho(
+        -viewport_width / 2, 
+        viewport_width / 2, 
+        -viewport_height / 2, 
+        viewport_height / 2, 
+        -1.0, 1.0
+    );
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -372,7 +390,7 @@ void compute_pressure_grads() {
         pressure_grads[i] = compute_pressure_grad(particles[i].pos);
 }
 
-Vec2 compute_pressure_grad_particle_alternative(int index) {
+Vec2 compute_pressure_grad_particle(int index) {
     Vec2 grad = Vec2(0.0f, 0.0f);
     Vec2 pos = particles[index].pos;
 
@@ -399,65 +417,65 @@ Vec2 compute_pressure_grad_particle_alternative(int index) {
 
 }
 
-Vec2 compute_pressure_grad_particle(int index) {
-    Vec2 grad1 = Vec2(0.0f, 0.0f);
-    Vec2 pos = particles[index].pos;
+// Vec2 compute_pressure_grad_particle(int index) {
+//     Vec2 grad1 = Vec2(0.0f, 0.0f);
+//     Vec2 pos = particles[index].pos;
 
-    std::set<int> set1, set2;
+//     std::set<int> set1, set2;
 
-    auto coords = get_block(pos);
-    int x = coords.first, y = coords.second;
-    for(int i = x - 1; i <= x + 1; i++)
-        for(int j = y - 1; j <= y + 1; j++) {
-            if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
-                continue;
+//     auto coords = get_block(pos);
+//     int x = coords.first, y = coords.second;
+//     for(int i = x - 1; i <= x + 1; i++)
+//         for(int j = y - 1; j <= y + 1; j++) {
+//             if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+//                 continue;
             
-            for(auto &p: blocks[i][j]) {
-                if(p.id == index)
-                    continue;
-                assert(densities[p.id] > 0);
+//             for(auto &p: blocks[i][j]) {
+//                 if(p.id == index)
+//                     continue;
+//                 assert(densities[p.id] > 0);
 
-                float pressure = (pressures[p.id] + pressures[index]) * 0.5f;
-                set1.insert(p.id);
+//                 float pressure = (pressures[p.id] + pressures[index]) * 0.5f;
+//                 set1.insert(p.id);
 
-                Vec2 kernel_grad = smoothing_kernal_grad(pos - p.pos);
-                grad1 = grad1 + kernel_grad * (pressure / densities[p.id]);
-            }
-        }
+//                 Vec2 kernel_grad = smoothing_kernal_grad(pos - p.pos);
+//                 grad1 = grad1 + kernel_grad * (pressure / densities[p.id]);
+//             }
+//         }
 
-    // return grad;
+//     // return grad;
 
-    Vec2 grad2 = Vec2(0.0f, 0.0f);
-    for(int i = 0; i < particles.size(); i++) {
-        if(i == index)
-            continue;
-        assert(densities[i] > 0);
-        float pressure = (pressures[i] + pressures[index]) * 0.5f;
+//     Vec2 grad2 = Vec2(0.0f, 0.0f);
+//     for(int i = 0; i < particles.size(); i++) {
+//         if(i == index)
+//             continue;
+//         assert(densities[i] > 0);
+//         float pressure = (pressures[i] + pressures[index]) * 0.5f;
         
-        auto temp = get_block(particles[i].pos);
-        if(std::abs(temp.first - x) <= 1 && std::abs(temp.second - y) <= 1)
-            set2.insert(i);
+//         auto temp = get_block(particles[i].pos);
+//         if(std::abs(temp.first - x) <= 1 && std::abs(temp.second - y) <= 1)
+//             set2.insert(i);
 
-        Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
-        grad2 = grad2 + kernel_grad * (pressure / densities[i]);
-    }
+//         Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
+//         grad2 = grad2 + kernel_grad * (pressure / densities[i]);
+//     }
 
-    if(set1 != set2) {
-        for(int i: set1) {
-            printf("%d ", i);
-        }
-        printf("\n");
+//     if(set1 != set2) {
+//         for(int i: set1) {
+//             printf("%d ", i);
+//         }
+//         printf("\n");
 
-        for(int i: set2) {
-            printf("%d ", i);
-        }
-        printf("\n");
-        exit(1);
-    }
-    assert((grad1 - grad2).norm2() < 1e-4);
+//         for(int i: set2) {
+//             printf("%d ", i);
+//         }
+//         printf("\n");
+//         exit(1);
+//     }
+//     assert((grad1 - grad2).norm2() < 1e-4);
 
-    return grad1;
-}
+//     return grad1;
+// }
 
 void compute_pressure_grads_particle() {
     for(int i = 0; i < particles.size(); i++)
@@ -617,23 +635,23 @@ void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
         
-        p.pos = p.pos + x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5;
         p.vel = p.vel + x_dots[i].acc * dt;
+        p.pos = p.pos + p.vel * dt;
 
         clamp_particle(p);
     }
 }
 
 inline Vec2 compute_acc(int index) {
-    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    return pressure_grads[index] * (-1.0 / densities[index]);
+    return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
+    // return pressure_grads[index] * (-1.0 / densities[index]);
 }
 
 void step_ahead() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        particles_swap[i].pos = p.pos + x_dots[i].vel * dt * TWO_THIRDS;
-        particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
+        particles_swap[i].pos = p.pos + p.vel * dt;
+        // particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
     }
 }
 
@@ -651,8 +669,8 @@ void increment_x_dot(float cur_weight) {
         StateDerivative s;
         s.vel = p.vel;
         s.acc = compute_acc(i);
-        x_dots[i].vel = s.vel * cur_weight + x_dots[i].vel * (1 - cur_weight);
-        x_dots[i].acc = s.acc * cur_weight + x_dots[i].acc * (1 - cur_weight);
+        // x_dots[i].vel = x_dots[i].vel;
+        x_dots[i].acc = s.acc;
     }
 }
 
@@ -667,6 +685,7 @@ void print_particle(Particle &p) {
 void report_time(Timer &t, const char *str) {
     printf("%s took %f seconds\n", str, t.time());
 }
+
 
 int main() {
 
@@ -692,8 +711,11 @@ int main() {
         }
 
     
+    Timer duration;
 
     while (!glfwWindowShouldClose(window)) {
+
+        duration.reset();
 
         frame++;
 
@@ -760,6 +782,12 @@ int main() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        running_duration = momentum * running_duration + (1 - momentum) * duration.time();
+
+        if(frame % 100 == 0) {
+            printf("fps: %f\n", 1 / running_duration);
+        }
 
         // std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
