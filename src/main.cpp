@@ -613,21 +613,21 @@ inline void clamp_particle(Particle &p) {
     if(p.pos.x > BOX_WIDTH / 2) {
         p.pos.x = BOX_WIDTH - p.pos.x;
         p.pos.x = std::max(p.pos.x, -BOX_WIDTH / 2);
-        p.vel.x = -std::abs(p.vel.x);
+        p.vel.x = -std::abs(p.vel.x) * 0.5;
     } else if(p.pos.x < -BOX_WIDTH / 2) {
         p.pos.x = -BOX_WIDTH - p.pos.x;
         p.pos.x = std::min(p.pos.x, BOX_WIDTH / 2);
-        p.vel.x = std::abs(p.vel.x);
+        p.vel.x = std::abs(p.vel.x) * 0.5;
     }
 
     if(p.pos.y > BOX_HEIGHT / 2) {
         p.pos.y = BOX_HEIGHT - p.pos.y;
         p.pos.y = std::max(p.pos.y, -BOX_HEIGHT / 2);
-        p.vel.y = -std::abs(p.vel.y);
+        p.vel.y = -std::abs(p.vel.y) * 0.5;
     } else if(p.pos.y < -BOX_HEIGHT / 2) {
         p.pos.y = -BOX_HEIGHT - p.pos.y;
         p.pos.y = std::min(p.pos.y, BOX_HEIGHT / 2);
-        p.vel.y = std::abs(p.vel.y);
+        p.vel.y = std::abs(p.vel.y) * 0.5;
     }
 }
 
@@ -644,8 +644,8 @@ void update_velocities() {
 
 
 inline Vec2 compute_acc(int index) {
-    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    return pressure_grads[index] * (-1.0 / densities[index]);
+    return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
+    // return pressure_grads[index] * (-1.0 / densities[index]);
 }
 
 void step_ahead() {
