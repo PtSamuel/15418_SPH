@@ -259,58 +259,59 @@ float compute_density(Vec2 pos) {
     auto coords = get_block(pos);
     int x = coords.first, y = coords.second;
 
-    // float density = 0;
+    float density = 0;
 
-    // for(int i = x - 1; i <= x + 1; i++)
-    //     for(int j = y - 1; j <= y + 1; j++) {
-    //         if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
-    //             continue;
-    //         for(auto &p: blocks[i][j]) {
-    //             Vec2 disp = pos - p.pos;
-    //             density += smoothing_kernal(disp);
-    //         }
-    //     }
-
-    std::set<int> set1;
     for(int i = x - 1; i <= x + 1; i++)
         for(int j = y - 1; j <= y + 1; j++) {
             if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
                 continue;
-            for(auto &p: blocks[i][j])
-                set1.insert(p.id);
+            for(auto &p: blocks[i][j]) {
+                Vec2 disp = pos - p.pos;
+                density += smoothing_kernal(disp);
+            }
         }
 
-    std::set<int> set2;
+    // std::set<int> set1;
+    // for(int i = x - 1; i <= x + 1; i++)
+    //     for(int j = y - 1; j <= y + 1; j++) {
+    //         if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+    //             continue;
+    //         for(auto &p: blocks[i][j])
+    //             set1.insert(p.id);
+    //     }
 
-    float density = 0;
+    // std::set<int> set2;
 
-    for(auto &p: particles) {
-        Vec2 disp = pos - p.pos;
-        density += smoothing_kernal(disp);
-        auto temp = get_block(p.pos);
-        if((std::abs(temp.first - x) <= 1) && (std::abs(temp.second - y) <= 1)) {
-            set2.insert(p.id);
-        }
-    }
+    // float density = 0;
 
-    if(set1 != set2) {
-        printf("frame: %d, %f, %f\n", frame, pos.x, pos.y);
-        for(int i: set1) {
-            printf("%d ", i);
-        }
-        printf("\n");
+    // for(auto &p: particles) {
+    //     Vec2 disp = pos - p.pos;
+    //     density += smoothing_kernal(disp);
+    //     auto temp = get_block(p.pos);
+    //     if((std::abs(temp.first - x) <= 1) && (std::abs(temp.second - y) <= 1)) {
+    //         set2.insert(p.id);
+    //     }
+    // }
 
-        for(int i: set2) {
-            printf("%d ", i);
-        }
-        printf("\n");
+    // assert(set1 == set2);
+    // if(set1 != set2) {
+    //     printf("frame: %d, %f, %f\n", frame, pos.x, pos.y);
+    //     for(int i: set1) {
+    //         printf("%d ", i);
+    //     }
+    //     printf("\n");
+
+    //     for(int i: set2) {
+    //         printf("%d ", i);
+    //     }
+    //     printf("\n");
         
-        report_block(particles[25].pos);
+    //     report_block(particles[25].pos);
         
-        // printf("%d, %d, %d, %d\n", temp.first, temp.second, x, y);
+    //     // printf("%d, %d, %d, %d\n", temp.first, temp.second, x, y);
         
-        exit(1);
-    }
+    //     exit(1);
+    // }
 
     // int dummy;
     // scanf("%d", &dummy);
@@ -339,6 +340,10 @@ void compute_pressures() {
 }
 
 Vec2 compute_pressure_grad(Vec2 pos) {
+
+    auto coords = get_block(pos);
+    int x = coords.first, y = coords.second;
+    
     Vec2 grad = Vec2(0.0f, 0.0f);
     for(int i = 0; i < particles.size(); i++) {
         assert(densities[i] > 0);
@@ -346,6 +351,19 @@ Vec2 compute_pressure_grad(Vec2 pos) {
         Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
         grad = grad + kernel_grad * (pressures[i] / densities[i]);
     }
+
+    // for(int i = x - 1; i <= x + 1; i++)
+    //     for(int j = y - 1; j <= y + 1; j++) {
+    //         if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+    //             continue;
+            
+    //         for(auto &p: blocks[i][j]) {
+    //             assert(densities[p.id] > 0);
+    //             Vec2 kernel_grad = smoothing_kernal_grad(pos - p.pos);
+    //             grad = grad + kernel_grad * (pressures[p.id] / densities[p.id]);
+    //         }
+    //     }
+
     return grad;
 }
 
@@ -354,33 +372,96 @@ void compute_pressure_grads() {
         pressure_grads[i] = compute_pressure_grad(particles[i].pos);
 }
 
-Vec2 compute_pressure_grad_particle(int index) {
+Vec2 compute_pressure_grad_particle_alternative(int index) {
     Vec2 grad = Vec2(0.0f, 0.0f);
     Vec2 pos = particles[index].pos;
+
+    auto coords = get_block(pos);
+    int x = coords.first, y = coords.second;
+    for(int i = x - 1; i <= x + 1; i++)
+        for(int j = y - 1; j <= y + 1; j++) {
+            if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+                continue;
+            
+            for(auto &p: blocks[i][j]) {
+                if(p.id == index)
+                    continue;
+                assert(densities[p.id] > 0);
+
+                float pressure = (pressures[p.id] + pressures[index]) * 0.5f;
+
+                Vec2 kernel_grad = smoothing_kernal_grad(pos - p.pos);
+                grad = grad + kernel_grad * (pressure / densities[p.id]);
+            }
+        }
+
+    return grad;
+
+}
+
+Vec2 compute_pressure_grad_particle(int index) {
+    Vec2 grad1 = Vec2(0.0f, 0.0f);
+    Vec2 pos = particles[index].pos;
+
+    std::set<int> set1, set2;
+
+    auto coords = get_block(pos);
+    int x = coords.first, y = coords.second;
+    for(int i = x - 1; i <= x + 1; i++)
+        for(int j = y - 1; j <= y + 1; j++) {
+            if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
+                continue;
+            
+            for(auto &p: blocks[i][j]) {
+                if(p.id == index)
+                    continue;
+                assert(densities[p.id] > 0);
+
+                float pressure = (pressures[p.id] + pressures[index]) * 0.5f;
+                set1.insert(p.id);
+
+                Vec2 kernel_grad = smoothing_kernal_grad(pos - p.pos);
+                grad1 = grad1 + kernel_grad * (pressure / densities[p.id]);
+            }
+        }
+
+    // return grad;
+
+    Vec2 grad2 = Vec2(0.0f, 0.0f);
     for(int i = 0; i < particles.size(); i++) {
         if(i == index)
             continue;
         assert(densities[i] > 0);
         float pressure = (pressures[i] + pressures[index]) * 0.5f;
+        
+        auto temp = get_block(particles[i].pos);
+        if(std::abs(temp.first - x) <= 1 && std::abs(temp.second - y) <= 1)
+            set2.insert(i);
+
         Vec2 kernel_grad = smoothing_kernal_grad(pos - particles[i].pos);
-        grad = grad + kernel_grad * (pressure / densities[i]);
+        grad2 = grad2 + kernel_grad * (pressure / densities[i]);
     }
-    return grad;
+
+    if(set1 != set2) {
+        for(int i: set1) {
+            printf("%d ", i);
+        }
+        printf("\n");
+
+        for(int i: set2) {
+            printf("%d ", i);
+        }
+        printf("\n");
+        exit(1);
+    }
+    assert((grad1 - grad2).norm2() < 1e-4);
+
+    return grad1;
 }
 
 void compute_pressure_grads_particle() {
     for(int i = 0; i < particles.size(); i++)
         pressure_grads[i] = compute_pressure_grad_particle(i);
-}
-
-
-Vec2 compute_density_grad(Vec2 pos) {
-    Vec2 grad = Vec2(0, 0);
-    for(auto &p: particles) {
-        Vec2 disp = pos - p.pos;
-        grad = grad + smoothing_kernal_grad(disp);
-    }
-    return grad;
 }
 
 GLuint textureID;  // OpenGL texture ID
