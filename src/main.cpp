@@ -645,13 +645,18 @@ void update_velocities() {
 
 
 inline Vec2 compute_acc(int index) {
-    return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    // return pressure_grads[index] * (-1.0 / densities[index]);
+    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
+    return pressure_grads[index] * (-1.0 / densities[index]);
 }
 
 void step_ahead() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
+        // particles_swap[i].pos = p.pos + (x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5) * TWO_THIRDS;
+        
+        // This is similar
+        // particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
+        // particles_swap[i].pos = p.pos + x_dots[i].vel * dt * TWO_THIRDS;
         particles_swap[i].pos = p.pos + x_dots[i].vel * dt * TWO_THIRDS;
         particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
     }
@@ -739,32 +744,6 @@ int main() {
         duration.reset();
 
         frame++;
-
-        /* OLD WAY */
-        // distribute();
-        // compute_densities();
-        // compute_pressures();
-        // compute_pressure_grads_particle();
-        // compute_x_dot();
-
-        // step_ahead_RK1();
-        // particles.swap(particles_swap);
-
-        // distribute();
-        // glClear(GL_COLOR_BUFFER_BIT);   
-        // glColor3f(1.0f, 1.0f, 1.0f);
-
-        // compute_densities();
-        // compute_pressures();
-        // compute_pressure_grads_particle();
-
-        // compute_x_dot();
-
-        // particles.swap(particles_swap);
-        // distribute();
-
-        // update_velocities_simple();
-
 
         /* NEW WAY SEEMS TO WORK */ 
         distribute();
