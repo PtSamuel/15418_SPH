@@ -27,6 +27,7 @@
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 #define TWO_THIRDS 2.0f / 3.0f
+#define DAMPING_FACTOR 1.0f
 
 #define PRESSURE_RESPONSE 200.0f
 
@@ -613,21 +614,21 @@ inline void clamp_particle(Particle &p) {
     if(p.pos.x > BOX_WIDTH / 2) {
         p.pos.x = BOX_WIDTH - p.pos.x;
         p.pos.x = std::max(p.pos.x, -BOX_WIDTH / 2);
-        p.vel.x = -std::abs(p.vel.x) * 0.5;
+        p.vel.x = -std::abs(p.vel.x) * DAMPING_FACTOR;
     } else if(p.pos.x < -BOX_WIDTH / 2) {
         p.pos.x = -BOX_WIDTH - p.pos.x;
         p.pos.x = std::min(p.pos.x, BOX_WIDTH / 2);
-        p.vel.x = std::abs(p.vel.x) * 0.5;
+        p.vel.x = std::abs(p.vel.x) * DAMPING_FACTOR;
     }
 
     if(p.pos.y > BOX_HEIGHT / 2) {
         p.pos.y = BOX_HEIGHT - p.pos.y;
         p.pos.y = std::max(p.pos.y, -BOX_HEIGHT / 2);
-        p.vel.y = -std::abs(p.vel.y) * 0.5;
+        p.vel.y = -std::abs(p.vel.y) * DAMPING_FACTOR;
     } else if(p.pos.y < -BOX_HEIGHT / 2) {
         p.pos.y = -BOX_HEIGHT - p.pos.y;
         p.pos.y = std::min(p.pos.y, BOX_HEIGHT / 2);
-        p.vel.y = std::abs(p.vel.y) * 0.5;
+        p.vel.y = std::abs(p.vel.y) * DAMPING_FACTOR;
     }
 }
 
@@ -678,7 +679,8 @@ void increment_x_dot(float cur_weight) {
 void step_ahead_RK1() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        particles_swap[i].pos = p.pos + p.vel * dt;
+        particles_swap[i].pos = p.pos + x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5;
+        particles_swap[i].vel = particles_swap[i].vel + x_dots[i].acc * dt;
     }
 }
 
@@ -738,50 +740,55 @@ int main() {
 
         frame++;
 
-        step_ahead_RK1();
-        particles.swap(particles_swap);
+        /* OLD WAY */
+        // distribute();
+        // compute_densities();
+        // compute_pressures();
+        // compute_pressure_grads_particle();
+        // compute_x_dot();
 
-        distribute();
-        // sanity_check_blocks();
+        // step_ahead_RK1();
+        // particles.swap(particles_swap);
 
-        glClear(GL_COLOR_BUFFER_BIT);   
-        glColor3f(1.0f, 1.0f, 1.0f);
-
-        Timer time;
-        compute_densities();
-        // report_time(time, "compute densities");
-
-        time.reset();
-        compute_pressures();
-        // report_time(time, "compute pressures");
-
-        time.reset();
-        compute_pressure_grads_particle();
-        // report_time(time, "compute pressure gradients");
-
-        // time.reset();
-        // updateTexture();
-        // drawTexturedQuad();
-        // report_time(time, "draw texture");
-
-        time.reset();
-
-        compute_x_dot();
-
-        // step_ahead();
-        
-        particles.swap(particles_swap);
-        distribute();
+        // distribute();
+        // glClear(GL_COLOR_BUFFER_BIT);   
+        // glColor3f(1.0f, 1.0f, 1.0f);
 
         // compute_densities();
         // compute_pressures();
         // compute_pressure_grads_particle();
 
-        // increment_x_dot(0.75);
+        // compute_x_dot();
+
         // particles.swap(particles_swap);
+        // distribute();
 
-        update_velocities_simple();
+        // update_velocities_simple();
 
+
+        /* NEW WAY SEEMS TO WORK */ 
+        distribute();
+
+        compute_densities();
+        compute_pressures();
+        compute_pressure_grads_particle();
+
+        compute_x_dot();
+
+        step_ahead();  
+        particles.swap(particles_swap);
+        distribute();
+
+        compute_densities();
+        compute_pressures();
+        compute_pressure_grads_particle();
+
+        increment_x_dot(0.75);
+        particles.swap(particles_swap);
+
+        update_velocities();
+
+        glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
         for(auto &p: particles)
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
