@@ -21,14 +21,14 @@
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
-#define BOX_HEIGHT 40.0f
+#define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
-#define SMOOTH_RADIUS 1.5f
+#define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 #define TWO_THIRDS 2.0f / 3.0f
 
-#define PRESSURE_RESPONSE 500.0f
+#define PRESSURE_RESPONSE 200.0f
 
 #define TEXTURE_SUBDIVS 128
 
@@ -52,7 +52,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-float desired_density = average_density * 2;
+float desired_density = average_density;
 
 const float dt = 0.01;
 
@@ -635,23 +635,24 @@ void update_velocities() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
         
+        p.pos = p.pos + x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5;
         p.vel = p.vel + x_dots[i].acc * dt;
-        p.pos = p.pos + p.vel * dt;
 
         clamp_particle(p);
     }
 }
 
+
 inline Vec2 compute_acc(int index) {
-    return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    // return pressure_grads[index] * (-1.0 / densities[index]);
+    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
+    return pressure_grads[index] * (-1.0 / densities[index]);
 }
 
 void step_ahead() {
     for(int i = 0; i < particles.size(); i++) {
         Particle &p = particles[i];
-        particles_swap[i].pos = p.pos + p.vel * dt;
-        // particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
+        particles_swap[i].pos = p.pos + x_dots[i].vel * dt * TWO_THIRDS;
+        particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
     }
 }
 
@@ -669,8 +670,26 @@ void increment_x_dot(float cur_weight) {
         StateDerivative s;
         s.vel = p.vel;
         s.acc = compute_acc(i);
-        // x_dots[i].vel = x_dots[i].vel;
-        x_dots[i].acc = s.acc;
+        x_dots[i].vel = s.vel * cur_weight + x_dots[i].vel * (1 - cur_weight);
+        x_dots[i].acc = s.acc * cur_weight + x_dots[i].acc * (1 - cur_weight);
+    }
+}
+
+void step_ahead_RK1() {
+    for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
+        particles_swap[i].pos = p.pos + p.vel * dt;
+    }
+}
+
+void update_velocities_simple() {
+    for(int i = 0; i < particles.size(); i++) {
+        Particle &p = particles[i];
+        
+        p.vel = p.vel + x_dots[i].acc * dt;
+        p.pos = p.pos + p.vel * dt;
+
+        clamp_particle(p);
     }
 }
 
@@ -719,6 +738,9 @@ int main() {
 
         frame++;
 
+        step_ahead_RK1();
+        particles.swap(particles_swap);
+
         distribute();
         // sanity_check_blocks();
 
@@ -746,18 +768,19 @@ int main() {
 
         compute_x_dot();
 
-        step_ahead();
+        // step_ahead();
+        
         particles.swap(particles_swap);
         distribute();
 
-        compute_densities();
-        compute_pressures();
-        compute_pressure_grads_particle();
+        // compute_densities();
+        // compute_pressures();
+        // compute_pressure_grads_particle();
 
-        increment_x_dot(0.75);
-        particles.swap(particles_swap);
+        // increment_x_dot(0.75);
+        // particles.swap(particles_swap);
 
-        update_velocities();
+        update_velocities_simple();
 
         glColor3f(1.0f, 1.0f, 1.0f);
         for(auto &p: particles)
