@@ -19,7 +19,7 @@
 #define PARTICLE_RADIUS 0.1f
 #define PARTICLE_TILE_NUMBER 20
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.8
+#define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
@@ -250,6 +250,11 @@ void sanity_check_blocks() {
     printf("num particle: %d\n", sum);
 }
 
+void report_block(Vec2 pos) {
+    auto coords = get_block(pos);
+    printf("(%f, %f), (%d, %d)\n", pos.x, pos.y, coords.first, coords.second);
+}
+
 float compute_density(Vec2 pos) {
     auto coords = get_block(pos);
     int x = coords.first, y = coords.second;
@@ -283,7 +288,7 @@ float compute_density(Vec2 pos) {
         Vec2 disp = pos - p.pos;
         density += smoothing_kernal(disp);
         auto temp = get_block(p.pos);
-        if(std::abs(temp.first - x) <= 1 && std::abs(temp.second - y) <= 1) {
+        if((std::abs(temp.first - x) <= 1) && (std::abs(temp.second - y) <= 1)) {
             set2.insert(p.id);
         }
     }
@@ -299,6 +304,11 @@ float compute_density(Vec2 pos) {
             printf("%d ", i);
         }
         printf("\n");
+        
+        report_block(particles[25].pos);
+        
+        // printf("%d, %d, %d, %d\n", temp.first, temp.second, x, y);
+        
         exit(1);
     }
 
@@ -586,6 +596,8 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
     tile_particles(particles);
+    particles_swap = particles;
+
     initializeTexture();
 
     float multiplier = 1.179;
@@ -633,6 +645,7 @@ int main() {
 
         step_ahead();
         particles.swap(particles_swap);
+        distribute();
 
         compute_densities();
         compute_pressures();
