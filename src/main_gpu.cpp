@@ -18,7 +18,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 40
+#define PARTICLE_TILE_NUMBER 20
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
@@ -537,6 +537,34 @@ static void report_time(Timer &t, const char *str) {
     printf("%s took %f seconds\n", str, t.time());
 }
 
+static std::vector<float> densities_ref(particles.size());
+static std::vector<float> pressures_ref(particles.size());
+
+static void compute_refs() {
+    for(int i = 0; i < particles.size(); i++) {
+        float density = compute_density(particles[i].pos);
+        densities_ref[i] = density;
+        pressures_ref[i] = compute_pressure(density);
+    }
+}
+
+static void check_closeness() {
+    float max1 = 0;
+    float max2 = 0;
+
+    for(int i = 0; i < particles.size(); i++) {
+        float diff1 = std::abs(densities[i] - densities_ref[i]);
+        max1 = std::max(max1, diff1);
+        float diff2 = std::abs(pressures[i] - pressures_ref[i]);
+        max2 = std::max(max2, diff2);
+    }
+    if(max1 != 0) {
+        printf("density: %f, %.6g\n", densities[0], max1);
+    }
+    if(max2 != 0) {
+        printf("pressure: %f, %.6g\n", pressures[0], max2);
+    }
+}
 
 int main() {
 
@@ -579,8 +607,13 @@ int main() {
         // compute_densities_and_pressures();
         compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
 
+        // int dummy;
+        compute_refs();
+        check_closeness();
+        // scanf("%d", &dummy);
+
         // compute_densities();
-        compute_pressures();
+        // compute_pressures();
         compute_pressure_grads_particle();
 
         compute_x_dot();
