@@ -18,7 +18,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 2
+#define PARTICLE_TILE_NUMBER 40
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
@@ -563,7 +563,11 @@ int main() {
 
         distribute();
 
+        // for(int i = 0; i < particles.size(); i++)
+        //     printf("%d: %d\n", i, particles[i].id);
         compute_densities_gpu(particles.data(), particles.size(), densities.data());
+        // for(int i = 0; i < particles.size(); i++)
+        //     printf("%d: %f\n", i, densities[i]);
         // for(float f: densities)
         //     printf("%f\n", f);
 
@@ -605,6 +609,8 @@ int main() {
         if(frame % 100 == 0) {
             printf("fps: %f\n", 1 / running_duration);
         }
+
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     glfwDestroyWindow(window);

@@ -15,11 +15,11 @@
 static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 static const float normalizer = 1 / kernel_volume;
 
-static float *particles;
+static uchar1 *particles;
 static float *densities;
 
 struct CUDAParams {
-    float *particles;
+    uchar1 *particles;
     float *densities;
 };
 __constant__ CUDAParams params;
@@ -30,12 +30,17 @@ __device__ float smoothing_kernal(float2 disp) {
     return offset * offset * normalizer;
 }
 
+__device__ __inline__ void print_particle(Particle &p) {
+    printf("pos %d: (%f, %f), vel: (%f, %f)\n", p.id, p.pos.x, p.pos.y, p.vel.x, p.vel.y);
+}
+
 __global__ void compute_density(int n) {
     int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
     if(index >= n) return;
 
-    printf("%d, %p\n", index, params.particles);
+    
     Particle cur = *(Particle*)&params.particles[index * sizeof(Particle)];
+    // print_particle(cur);
     float2 pos = make_float2(
         cur.pos.x,
         cur.pos.y
@@ -51,6 +56,8 @@ __global__ void compute_density(int n) {
         );
         density += smoothing_kernal(disp);
     }
+
+    // printf("%d: %f, %d\n", index, density, cur.id);
 
     params.densities[index] = density;
 }
@@ -81,7 +88,6 @@ void gpu_init(int n) {
     cudaMalloc(&particles, n * sizeof(Particle));
     cudaMalloc(&densities, n * sizeof(float));
     CUDAParams p;
-    printf("init: %p\n", particles);
     p.particles = particles;
     p.densities = densities;
 
@@ -89,7 +95,6 @@ void gpu_init(int n) {
     // cudaMemcpyToSymbol(&params, &p, sizeof(CUDAParams));
 
     cudaMemcpyToSymbol(params, &p, sizeof(CUDAParams));
-    printf("init: %p\n", params.particles);
 }
 
 void compute_densities_gpu(Particle *p, int n, float* dst) {
