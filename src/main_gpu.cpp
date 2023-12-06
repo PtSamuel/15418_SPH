@@ -576,8 +576,8 @@ int main() {
 
         distribute();
 
-        compute_densities_and_pressures();
-        // compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data());
+        // compute_densities_and_pressures();
+        compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
 
         // compute_densities();
         compute_pressures();
