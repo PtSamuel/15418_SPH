@@ -585,7 +585,7 @@ static void check_closeness() {
 
 int main() {
 
-    gpu_init(particles.size(), desired_density);
+    gpu_init(particles.size(), dt, desired_density);
     show_device();
 
     printf("BLOCK_X: %d, BLOCK_Y: %d\n", BLOCKS_X, BLOCKS_Y);
@@ -637,8 +637,10 @@ int main() {
         // compute_x_dot();
         compute_x_dot_gpu(particles.size(), x_dots.data());
 
-        step_ahead();  
+        // step_ahead();
+        step_ahead_gpu(particles.size(), particles_swap.data());  
         particles.swap(particles_swap);
+
         distribute();
 
         // compute_densities();
