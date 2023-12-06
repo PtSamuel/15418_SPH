@@ -12,15 +12,20 @@
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
+#define PRESSURE_RESPONSE 200.0f
+
 static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 static const float normalizer = 1 / kernel_volume;
 
 static uchar1 *particles;
 static float *densities;
+static float *pressures;
 
 struct CUDAParams {
     uchar1 *particles;
     float *densities;
+    float *pressures;
+    float desired_density;
 };
 __constant__ CUDAParams params;
 
@@ -34,7 +39,7 @@ __device__ __inline__ void print_particle(Particle &p) {
     printf("pos %d: (%f, %f), vel: (%f, %f)\n", p.id, p.pos.x, p.pos.y, p.vel.x, p.vel.y);
 }
 
-__global__ void compute_density(int n) {
+__global__ void compute_density_and_pressure(int n) {
     int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
     if(index >= n) return;
 
@@ -60,7 +65,10 @@ __global__ void compute_density(int n) {
     // printf("%d: %f, %d\n", index, density, cur.id);
 
     params.densities[index] = density;
+    float pressure = PRESSURE_RESPONSE * (density - params.desired_density);
+    params.pressures[index] = pressure;
 }
+
 
 void show_device() {
     int device_count = 0;
@@ -84,12 +92,17 @@ void show_device() {
     printf("---------------------------------------------------------\n");   
 }
 
-void gpu_init(int n) {
+void gpu_init(int n, float desired_density) {
+
     cudaMalloc(&particles, n * sizeof(Particle));
     cudaMalloc(&densities, n * sizeof(float));
+    cudaMalloc(&pressures, n * sizeof(float));
+
     CUDAParams p;
     p.particles = particles;
     p.densities = densities;
+    p.pressures = pressures;
+    p.desired_density = desired_density;
 
     // It is params, not &params
     // cudaMemcpyToSymbol(&params, &p, sizeof(CUDAParams));
@@ -97,14 +110,28 @@ void gpu_init(int n) {
     cudaMemcpyToSymbol(params, &p, sizeof(CUDAParams));
 }
 
-void compute_densities_gpu(Particle *p, int n, float* dst) {
+void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density, float *dst_pressure) {
     cudaMemcpy(particles, p, n * sizeof(Particle), cudaMemcpyHostToDevice);
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
-    compute_density<<<grid_dim, block_dim>>>(n);
+    compute_density_and_pressure<<<grid_dim, block_dim>>>(n);
+
     cudaDeviceSynchronize();
 
-    cudaMemcpy(dst, densities, n * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(dst_density, densities, n * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(dst_pressure, pressures, n * sizeof(float), cudaMemcpyDeviceToHost);
 }
+
+// void compute_pressures_gpu(float *p, int n, float* dst) {
+//     cudaMemcpy(prssures, p, n * sizeof(float), cudaMemcpyHostToDevice);
+//     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    
+//     dim3 grid_dim(num_blocks, 1);
+//     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+//     compute_pressures<<<grid_dim, block_dim>>>(n);
+//     cudaDeviceSynchronize();
+
+//     cudaMemcpy(dst, pressures, n * sizeof(float), cudaMemcpyDeviceToHost);
+// }

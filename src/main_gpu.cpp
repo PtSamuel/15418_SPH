@@ -46,8 +46,8 @@ static float running_duration;
 
 std::array<std::array<std::vector<Particle>, BLOCKS_Y>, BLOCKS_X> blocks;
 
-    float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
-    float normalizer = 1 / kernel_volume;
+float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
+float normalizer = 1 / kernel_volume;
 
 static float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
 static float desired_density = average_density;
@@ -294,6 +294,19 @@ static void compute_pressures() {
         pressures[i] = compute_pressure(densities[i]);
 }
 
+
+static void compute_densities_and_pressures() {
+    float max = 0;
+    for(int i = 0; i < particles.size(); i++) {
+        float density = compute_density(particles[i].pos);
+        densities[i] = density;
+        if(density > max)
+            max = density;
+        pressures[i] = compute_pressure(densities[i]);
+    }
+    max_density = max;
+}
+
 static Vec2 compute_pressure_grad_particle(int index) {
     Vec2 grad = Vec2(0.0f, 0.0f);
     Vec2 pos = particles[index].pos;
@@ -527,7 +540,7 @@ static void report_time(Timer &t, const char *str) {
 
 int main() {
 
-    gpu_init(particles.size());
+    gpu_init(particles.size(), desired_density);
     show_device();
 
     printf("BLOCK_X: %d, BLOCK_Y: %d\n", BLOCKS_X, BLOCKS_Y);
@@ -563,13 +576,8 @@ int main() {
 
         distribute();
 
-        // for(int i = 0; i < particles.size(); i++)
-        //     printf("%d: %d\n", i, particles[i].id);
-        compute_densities_gpu(particles.data(), particles.size(), densities.data());
-        // for(int i = 0; i < particles.size(); i++)
-        //     printf("%d: %f\n", i, densities[i]);
-        // for(float f: densities)
-        //     printf("%f\n", f);
+        compute_densities_and_pressures();
+        // compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data());
 
         // compute_densities();
         compute_pressures();
