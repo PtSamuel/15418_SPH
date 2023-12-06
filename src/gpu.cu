@@ -18,15 +18,24 @@ static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 static const float normalizer = 1 / kernel_volume;
 
 static uchar1 *particles;
+static uchar1 *particles_swap;
 static float *densities;
 static float *pressures;
 static float2 *pressure_grads;
+static uchar1 *x_dots;
+
+struct StateDerivateCUDA {
+    float2 vel;
+    float2 acc;
+};
 
 struct CUDAParams {
     uchar1 *particles;
+    uchar1 *particles_swap;
     float *densities;
     float *pressures;
     float2 *pressure_grads;
+    uchar1 *x_dots;
 
     float desired_density;
 };
@@ -111,16 +120,20 @@ void gpu_init(int n, float desired_density) {
     // printf("size of float2: %ld\n", sizeof(float2));
 
     cudaMalloc(&particles, n * sizeof(Particle));
+    cudaMalloc(&particles_swap, n * sizeof(Particle));
     cudaMalloc(&densities, n * sizeof(float));
     cudaMalloc(&pressures, n * sizeof(float));
     cudaMalloc(&pressure_grads, n * sizeof(float2));
+    cudaMalloc(&x_dots, n * sizeof(StateDerivateCUDA));
 
     CUDAParams p;
     p.particles = particles;
+    p.particles_swap = particles_swap;
     p.densities = densities;
     p.pressures = pressures;
     p.pressure_grads = pressure_grads;
     p.desired_density = desired_density;
+    p.x_dots = x_dots;
 
     // It is params, not &params
     // cudaMemcpyToSymbol(&params, &p, sizeof(CUDAParams));
@@ -185,4 +198,36 @@ void compute_pressure_grads_newton_gpu(int n, Vec2 *dst_grad) {
     cudaDeviceSynchronize();
 
     cudaMemcpy(dst_grad, pressure_grads, n * sizeof(float2), cudaMemcpyDeviceToHost);
+}
+
+__device__ inline float2 compute_acc(int index) {
+    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
+    float2 grad = params.pressure_grads[index];
+    return make_float2(
+        grad.x * (-1.0 / params.densities[index]),
+        grad.y * (-1.0 / params.densities[index])
+    );
+}
+
+__global__ void compute_x_dot(int n) {
+    int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
+    if(index >= n) return;
+
+    Particle cur = *(Particle*)&params.particles[index * sizeof(Particle)];
+    StateDerivateCUDA *s = (StateDerivateCUDA*)&params.x_dots[index * sizeof(StateDerivateCUDA)];
+
+    s->vel = make_float2(cur.vel.x, cur.vel.y);
+    s->acc = compute_acc(index);
+}
+
+void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
+    int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    
+    dim3 grid_dim(num_blocks, 1);
+    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+    compute_x_dot<<<grid_dim, block_dim>>>(n);
+
+    cudaDeviceSynchronize();
+
+    cudaMemcpy(dst_x_dot, x_dots, n * sizeof(StateDerivative), cudaMemcpyDeviceToHost);
 }

@@ -634,7 +634,8 @@ int main() {
 
         // compute_pressure_grads_newton();
 
-        compute_x_dot();
+        // compute_x_dot();
+        compute_x_dot_gpu(particles.size(), x_dots.data());
 
         step_ahead();  
         particles.swap(particles_swap);
@@ -644,7 +645,8 @@ int main() {
         // compute_pressures();
         // compute_densities_and_pressures();
         compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
-        compute_pressure_grads_newton();
+        // compute_pressure_grads_newton();
+        compute_pressure_grads_newton_gpu(particles.size(), pressure_grads.data());
 
         increment_x_dot(0.75);
         particles.swap(particles_swap);
