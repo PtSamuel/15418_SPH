@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <string>
 #include <cmath>
 #include <vector>
 #include <random>
@@ -307,7 +308,7 @@ static void compute_densities_and_pressures() {
     max_density = max;
 }
 
-static Vec2 compute_pressure_grad_particle(int index) {
+static Vec2 compute_pressure_grad_newton(int index) {
     Vec2 grad = Vec2(0.0f, 0.0f);
     Vec2 pos = particles[index].pos;
 
@@ -334,9 +335,9 @@ static Vec2 compute_pressure_grad_particle(int index) {
 
 }
 
-static void compute_pressure_grads_particle() {
+static void compute_pressure_grads_newton() {
     for(int i = 0; i < particles.size(); i++)
-        pressure_grads[i] = compute_pressure_grad_particle(i);
+        pressure_grads[i] = compute_pressure_grad_newton(i);
 }
 
 static GLuint textureID;  // OpenGL texture ID
@@ -539,6 +540,7 @@ static void report_time(Timer &t, const char *str) {
 
 static std::vector<float> densities_ref(particles.size());
 static std::vector<float> pressures_ref(particles.size());
+static std::vector<Vec2> pressure_grads_ref(particles.size());
 
 static void compute_refs() {
     for(int i = 0; i < particles.size(); i++) {
@@ -546,23 +548,38 @@ static void compute_refs() {
         densities_ref[i] = density;
         pressures_ref[i] = compute_pressure(density);
     }
+    for(int i = 0; i < particles.size(); i++) {
+        pressure_grads_ref[i] = compute_pressure_grad_newton(i);
+    }
 }
 
 static void check_closeness() {
     float max1 = 0;
     float max2 = 0;
+    float max3 = 0;
+    float max4 = 0;
 
     for(int i = 0; i < particles.size(); i++) {
         float diff1 = std::abs(densities[i] - densities_ref[i]);
         max1 = std::max(max1, diff1);
         float diff2 = std::abs(pressures[i] - pressures_ref[i]);
         max2 = std::max(max2, diff2);
+        float diff3 = std::abs(pressure_grads[i].x - pressure_grads_ref[i].x);
+        max3 = std::max(max3, diff3);
+        float diff4 = std::abs(pressure_grads[i].y - pressure_grads_ref[i].y);
+        max4 = std::max(max4, diff4);
     }
     if(max1 != 0) {
         printf("density: %f, %.6g\n", densities[0], max1);
     }
     if(max2 != 0) {
         printf("pressure: %f, %.6g\n", pressures[0], max2);
+    }
+    if(max3 != 0) {
+        printf("pressure grad x: %f, %.6g\n", pressure_grads[0].x, max3);
+    }
+    if(max4 != 0) {
+        printf("pressure grad y: %f, %.6g\n", pressure_grads[0].y, max4);
     }
 }
 
@@ -604,17 +621,18 @@ int main() {
 
         distribute();
 
+
         // compute_densities_and_pressures();
         compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
+        // compute_refs();
+        compute_pressure_grads_newton_gpu(particles.size(), pressure_grads.data());
 
-        // int dummy;
-        compute_refs();
-        check_closeness();
-        // scanf("%d", &dummy);
+        // check_closeness();
 
-        // compute_densities();
-        // compute_pressures();
-        compute_pressure_grads_particle();
+        // std::string str;
+        // std::getline(std::cin, str);
+
+        // compute_pressure_grads_newton();
 
         compute_x_dot();
 
@@ -622,9 +640,11 @@ int main() {
         particles.swap(particles_swap);
         distribute();
 
-        compute_densities();
-        compute_pressures();
-        compute_pressure_grads_particle();
+        // compute_densities();
+        // compute_pressures();
+        // compute_densities_and_pressures();
+        compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
+        compute_pressure_grads_newton();
 
         increment_x_dot(0.75);
         particles.swap(particles_swap);

@@ -27,6 +27,8 @@ GLFW/glfw3.h
 -
 iostream
 -
+string
+-
 cmath
 -
 vector
