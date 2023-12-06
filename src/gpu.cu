@@ -160,8 +160,12 @@ void gpu_init(int n, float step, float desired_density) {
     cudaMemcpyToSymbol(params, &p, sizeof(CUDAParams));
 }
 
+void load_particles_to_gpu(Particle *p, int n) {
+    cudaMemcpy(particles, p, sizeof(Particle) * n, cudaMemcpyHostToDevice);
+}
+
 void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density, float *dst_pressure) {
-    cudaMemcpy(particles, p, n * sizeof(Particle), cudaMemcpyHostToDevice);
+    // cudaMemcpy(particles, p, n * sizeof(Particle), cudaMemcpyHostToDevice);
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
