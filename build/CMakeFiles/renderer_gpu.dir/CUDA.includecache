@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/include/Particle.h
+cassert
+-
+cmath
+-
+
+../src/include/gpu.h
+Particle.h
+../src/include/Particle.h
+
+/home/johnsmith/Desktop/15418_project/src/gpu.cu
+string
+-
+math.h
+-
+cuda_runtime.h
+-
+gpu.h
+/home/johnsmith/Desktop/15418_project/src/gpu.h
+Particle.h
+/home/johnsmith/Desktop/15418_project/src/Particle.h
+

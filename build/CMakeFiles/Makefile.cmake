@@ -8,10 +8,10 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
   "../CMakeLists.txt"
-  "CMakeFiles/3.16.3/CMakeCCompiler.cmake"
+  "CMakeFiles/3.16.3/CMakeCUDACompiler.cmake"
   "CMakeFiles/3.16.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.16.3/CMakeSystem.cmake"
-  "/usr/share/cmake-3.16/Modules/CMakeCInformation.cmake"
+  "/usr/share/cmake-3.16/Modules/CMakeCUDAInformation.cmake"
   "/usr/share/cmake-3.16/Modules/CMakeCXXInformation.cmake"
   "/usr/share/cmake-3.16/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
   "/usr/share/cmake-3.16/Modules/CMakeCommonLanguageInclude.cmake"
@@ -20,16 +20,21 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/usr/share/cmake-3.16/Modules/CMakeLanguageInformation.cmake"
   "/usr/share/cmake-3.16/Modules/CMakeSystemSpecificInformation.cmake"
   "/usr/share/cmake-3.16/Modules/CMakeSystemSpecificInitialize.cmake"
+  "/usr/share/cmake-3.16/Modules/CheckCXXSourceCompiles.cmake"
+  "/usr/share/cmake-3.16/Modules/CheckIncludeFileCXX.cmake"
+  "/usr/share/cmake-3.16/Modules/CheckLibraryExists.cmake"
   "/usr/share/cmake-3.16/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
-  "/usr/share/cmake-3.16/Modules/Compiler/GNU-C.cmake"
   "/usr/share/cmake-3.16/Modules/Compiler/GNU-CXX.cmake"
   "/usr/share/cmake-3.16/Modules/Compiler/GNU.cmake"
+  "/usr/share/cmake-3.16/Modules/Compiler/NVIDIA-CUDA.cmake"
+  "/usr/share/cmake-3.16/Modules/FindCUDA.cmake"
+  "/usr/share/cmake-3.16/Modules/FindCUDA/select_compute_arch.cmake"
   "/usr/share/cmake-3.16/Modules/FindGLEW.cmake"
   "/usr/share/cmake-3.16/Modules/FindOpenGL.cmake"
   "/usr/share/cmake-3.16/Modules/FindPackageHandleStandardArgs.cmake"
   "/usr/share/cmake-3.16/Modules/FindPackageMessage.cmake"
+  "/usr/share/cmake-3.16/Modules/FindThreads.cmake"
   "/usr/share/cmake-3.16/Modules/Internal/CMakeCheckCompilerFlag.cmake"
-  "/usr/share/cmake-3.16/Modules/Platform/Linux-GNU-C.cmake"
   "/usr/share/cmake-3.16/Modules/Platform/Linux-GNU-CXX.cmake"
   "/usr/share/cmake-3.16/Modules/Platform/Linux-GNU.cmake"
   "/usr/share/cmake-3.16/Modules/Platform/Linux.cmake"
@@ -50,5 +55,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
+  "CMakeFiles/renderer_gpu.dir/DependInfo.cmake"
   "CMakeFiles/renderer.dir/DependInfo.cmake"
   )

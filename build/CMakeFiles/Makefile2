@@ -53,6 +53,7 @@ CMAKE_BINARY_DIR = /home/johnsmith/Desktop/15418_project/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/renderer_gpu.dir/all
 all: CMakeFiles/renderer.dir/all
 
 .PHONY : all
@@ -63,9 +64,37 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/renderer_gpu.dir/clean
 clean: CMakeFiles/renderer.dir/clean
 
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/renderer_gpu.dir
+
+# All Build rule for target.
+CMakeFiles/renderer_gpu.dir/all:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/depend
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=3,4,5 "Built target renderer_gpu"
+.PHONY : CMakeFiles/renderer_gpu.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/renderer_gpu.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 3
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/renderer_gpu.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 0
+.PHONY : CMakeFiles/renderer_gpu.dir/rule
+
+# Convenience name for target.
+renderer_gpu: CMakeFiles/renderer_gpu.dir/rule
+
+.PHONY : renderer_gpu
+
+# clean rule for target.
+CMakeFiles/renderer_gpu.dir/clean:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/clean
+.PHONY : CMakeFiles/renderer_gpu.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/renderer.dir

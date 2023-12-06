@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named renderer_gpu
+
+# Build rule for target.
+renderer_gpu: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 renderer_gpu
+.PHONY : renderer_gpu
+
+# fast build rule for target.
+renderer_gpu/fast:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/build
+.PHONY : renderer_gpu/fast
+
+#=============================================================================
 # Target rules for targets named renderer
 
 # Build rule for target.
@@ -122,6 +135,33 @@ renderer: cmake_check_build_system
 renderer/fast:
 	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/build
 .PHONY : renderer/fast
+
+src/gpu.o: src/gpu.cu.o
+
+.PHONY : src/gpu.o
+
+# target to build an object file
+src/gpu.cu.o:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/gpu.cu.o
+.PHONY : src/gpu.cu.o
+
+src/gpu.i: src/gpu.cu.i
+
+.PHONY : src/gpu.i
+
+# target to preprocess a source file
+src/gpu.cu.i:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/gpu.cu.i
+.PHONY : src/gpu.cu.i
+
+src/gpu.s: src/gpu.cu.s
+
+.PHONY : src/gpu.s
+
+# target to generate assembly for a file
+src/gpu.cu.s:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/gpu.cu.s
+.PHONY : src/gpu.cu.s
 
 src/main.o: src/main.cpp.o
 
@@ -150,6 +190,33 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/main_gpu.o: src/main_gpu.cpp.o
+
+.PHONY : src/main_gpu.o
+
+# target to build an object file
+src/main_gpu.cpp.o:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.o
+.PHONY : src/main_gpu.cpp.o
+
+src/main_gpu.i: src/main_gpu.cpp.i
+
+.PHONY : src/main_gpu.i
+
+# target to preprocess a source file
+src/main_gpu.cpp.i:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.i
+.PHONY : src/main_gpu.cpp.i
+
+src/main_gpu.s: src/main_gpu.cpp.s
+
+.PHONY : src/main_gpu.s
+
+# target to generate assembly for a file
+src/main_gpu.cpp.s:
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.s
+.PHONY : src/main_gpu.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -158,10 +225,17 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... renderer_gpu"
 	@echo "... renderer"
+	@echo "... src/gpu.o"
+	@echo "... src/gpu.i"
+	@echo "... src/gpu.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/main_gpu.o"
+	@echo "... src/main_gpu.i"
+	@echo "... src/main_gpu.s"
 .PHONY : help
 
 

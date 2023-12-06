@@ -1,3 +1,6 @@
+#ifndef __TIMER_H__
+#define __TIMER_H__
+
 #include <chrono>
 
 class Timer {
@@ -12,3 +15,5 @@ public:
         start = std::chrono::high_resolution_clock::now();
     }
 };
+
+#endif

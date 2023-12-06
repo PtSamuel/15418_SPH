@@ -1,3 +1,6 @@
+#ifndef __PARTICLE_H__
+#define __PARTICLE_H__
+
 #include <cassert>
 #include <cmath>
 
@@ -52,3 +55,5 @@ struct StateDerivative {
     Vec2 vel;
     Vec2 acc;
 };
+
+#endif
