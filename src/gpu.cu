@@ -494,30 +494,6 @@ void compute_x_dot_gpu(int n) {
     cudaDeviceSynchronize();
 }
 
-__global__ void step_ahead(int n, Particle *particles, Particle *update) {
-    int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
-    if(index >= n) return;
-
-    Particle cur = particles[index];
-
-    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS * 10;
-    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS * 10;
-    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS * 10;
-    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS * 10;
-    
-    update[index] = cur;
-}
-
-void step_ahead_gpu(int n) {
-    int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    
-    dim3 grid_dim(num_blocks, 1);
-    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
-    step_ahead<<<grid_dim, block_dim>>>(n, (Particle*)particles, (Particle*)particles_swap);
-
-    cudaDeviceSynchronize();
-}
-
 __device__ inline void clamp_particle(Particle &p) {
 
     float box_width = params.box_width;
@@ -542,6 +518,33 @@ __device__ inline void clamp_particle(Particle &p) {
         p.pos.y = fmin(p.pos.y, box_height / 2);
         p.vel.y = fabs(p.vel.y);
     }
+}
+
+
+__global__ void step_ahead(int n, Particle *particles, Particle *update) {
+    int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
+    if(index >= n) return;
+
+    Particle cur = particles[index];
+
+    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS * 10;
+    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS * 10;
+    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS * 10;
+    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS * 10;
+
+    clamp_particle(cur);
+    
+    update[index] = cur;
+}
+
+void step_ahead_gpu(int n) {
+    int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    
+    dim3 grid_dim(num_blocks, 1);
+    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+    step_ahead<<<grid_dim, block_dim>>>(n, (Particle*)particles, (Particle*)particles_swap);
+
+    cudaDeviceSynchronize();
 }
 
 __global__ void update_particle(int n, Particle *particles) {
