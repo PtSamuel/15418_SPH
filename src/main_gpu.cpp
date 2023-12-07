@@ -627,9 +627,9 @@ int main() {
         // set_status(SWAP_FIRST);
 
         // compute_densities_and_pressures();
-        compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
+        compute_densities_and_pressures_gpu(particles.size());
         // compute_refs();
-        compute_pressure_grads_newton_gpu(particles.size(), pressure_grads.data());
+        compute_pressure_grads_newton_gpu(particles.size());
 
         // check_closeness();
 
@@ -639,7 +639,7 @@ int main() {
         compute_x_dot_gpu(particles.size(), x_dots.data());
 
         // step_ahead();
-        step_ahead_gpu(particles.size(), particles_swap.data());  
+        step_ahead_gpu(particles.size());  
         particles.swap(particles_swap);
 
         distribute();
@@ -647,9 +647,9 @@ int main() {
         // compute_densities();
         // compute_pressures();
         // compute_densities_and_pressures();
-        compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
+        compute_densities_and_pressures_gpu(particles.size());
         // compute_pressure_grads_newton();
-        compute_pressure_grads_newton_gpu(particles.size(), pressure_grads.data());
+        compute_pressure_grads_newton_gpu(particles.size());
 
         // std::string str;
         // std::getline(std::cin, str);

@@ -169,8 +169,7 @@ void load_particles_to_gpu(Particle *p, int n) {
     cudaMemcpy(particles, p, sizeof(Particle) * n, cudaMemcpyHostToDevice);
 }
 
-void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density, float *dst_pressure) {
-    // cudaMemcpy(particles, p, n * sizeof(Particle), cudaMemcpyHostToDevice);
+void compute_densities_and_pressures_gpu(int n) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
@@ -182,9 +181,6 @@ void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density,
     else compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
-
-    cudaMemcpy(dst_density, densities, n * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(dst_pressure, pressures, n * sizeof(float), cudaMemcpyDeviceToHost);
 }
 
 
@@ -222,7 +218,7 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
 }
 
-void compute_pressure_grads_newton_gpu(int n, Vec2 *dst_grad) {
+void compute_pressure_grads_newton_gpu(int n) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
@@ -234,8 +230,6 @@ void compute_pressure_grads_newton_gpu(int n, Vec2 *dst_grad) {
     else compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
-
-    cudaMemcpy(dst_grad, pressure_grads, n * sizeof(float2), cudaMemcpyDeviceToHost);
 }
 
 __device__ inline float2 compute_acc(int index) {
@@ -283,9 +277,9 @@ void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
 
     compute_x_dot<<<grid_dim, block_dim>>>(n, status);
 
-    cudaDeviceSynchronize();
+    cudaMemcpy(dst_x_dot, x_dots, sizeof(StateDerivateCUDA) * n, cudaMemcpyDeviceToHost);
 
-    cudaMemcpy(dst_x_dot, x_dots, n * sizeof(StateDerivative), cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
 }
 
 __global__ void step_ahead(int n, Particle *particles, Particle *update) {
@@ -307,7 +301,7 @@ void unset_status() {
     status = SWAP_FIRST;
 }
 
-void step_ahead_gpu(int n, Particle *dst_particles_swap) {
+void step_ahead_gpu(int n) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
@@ -317,7 +311,6 @@ void step_ahead_gpu(int n, Particle *dst_particles_swap) {
     cudaDeviceSynchronize();
 
     status = SWAP_SECOND;
-    cudaMemcpy(dst_particles_swap, particles_swap, n * sizeof(Particle), cudaMemcpyDeviceToHost);
 }
 
 __device__ inline void clamp_particle(Particle &p) {
