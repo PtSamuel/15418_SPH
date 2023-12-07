@@ -238,6 +238,7 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
     Particle cur = particles[index];
 
+
     // WRONG 
     // Particle *particles = (Particle*)&params.particles[index * sizeof(Particle)];
     // if(*params.status == SWAP_SECOND)
@@ -251,6 +252,32 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
         cur.pos.x,
         cur.pos.y
     );
+
+    if(index == 0) {
+        printf("initially: %f, %f\n", pos.x, pos.y);
+
+        // THIS PRINTS NOTHING
+        uint test = 0;
+        for(int i = test - 1; i <= test + 1; i++) {
+            printf("1: %d\n", i);
+        }
+
+        // THIS PRINTS -1, 0, 1
+        int lo = test - 1;
+        int hi = test + 1;
+        for(int i = lo; i <= hi; i++) {
+            printf("2: %d\n", i);
+        }
+
+        for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
+            printf("x: %d\n", x);
+        int x1 = coords.x - 1, x2 = coords.x + 1;
+        int y1 = coords.x - 1, y2 = coords.y + 1;
+        for(int i = x1; i <= x2; i++)
+            printf("i: %d\n", i);
+        printf("%d, %d, %d, %d\n", x1, x2, y1, y2);
+        printf("%p\n", particles);
+    }
     
     float density = 0;
     for(int x = coords.x - 1; x <= coords.x + 1; x++)
@@ -294,6 +321,10 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
             }
         }
 
+    if(index == 0) {
+        printf("finally 2: %f\n", density);
+    }
+
     float density_ref = 0;
     for(int i = 0; i < n; i++) {
         Particle p = particles[i];
@@ -307,7 +338,7 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
     // density = density_ref;
 
-    if(fabs(density - density_ref) > 1e-3) {
+    if(fabs(density - density_ref) > 1e-3 && index == 0) {
         printf("particle: %d, error: %f, %f\n", index, density, density_ref);
     }
 
