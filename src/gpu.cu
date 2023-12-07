@@ -368,6 +368,7 @@ void update_particles_gpu(int n, Particle *dst_particles_swap) {
 
     cudaDeviceSynchronize();
 
-    status = SWAP_SECOND;
-    cudaMemcpy(dst_particles_swap, particles_swap, n * sizeof(Particle), cudaMemcpyDeviceToHost);
+    status = SWAP_FIRST;
+
+    cudaMemcpy(dst_particles_swap, particles, n * sizeof(Particle), cudaMemcpyDeviceToHost);
 }

@@ -11,5 +11,6 @@ void compute_pressure_grads_newton_gpu(int n);
 void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot);
 void step_ahead_gpu(int n);
 void unset_status();
+void update_particles_gpu(int n, Particle *dst_particles_swap);
 
 #endif

@@ -658,7 +658,8 @@ int main() {
         compute_x_dot_gpu(particles.size(), x_dots.data());
         particles.swap(particles_swap);
 
-        update_velocities();
+        // update_velocities();
+        update_particles_gpu(particles.size(), particles.data());
 
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
