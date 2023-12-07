@@ -14,11 +14,14 @@
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
-#define PRESSURE_RESPONSE 1000.0f
+#define PRESSURE_RESPONSE 200.0f
 
 static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 static const float normalizer = 1 / kernel_volume;
 
+static float BLOCK_LEN;
+static int BLOCKS_X;
+static int BLOCKS_Y;
 
 struct StateDerivateCUDA {
     float2 vel;
@@ -168,6 +171,10 @@ void gpu_init(int n, float step, float desired_density, float w, float h) {
 
     status = SWAP_DEFAULT;
 
+    BLOCK_LEN = SMOOTH_RADIUS;
+    BLOCKS_X = static_cast<int>(std::ceil(w / BLOCK_LEN));
+    BLOCKS_Y = static_cast<int>(std::ceil(h / BLOCK_LEN));
+
     // It is params, not &params
     // cudaMemcpyToSymbol(&params, &p, sizeof(CUDAParams));
 
@@ -269,18 +276,18 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         StateDerivateCUDA updated_x_dot;
 
         // RK2
-        // updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
-        // updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
+        updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
+        updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
 
-        // updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
-        // updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
+        updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
+        updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
 
         // SIMPLER LOOKAHEAD
-        updated_x_dot.vel.x = x_dot.vel.x;
-        updated_x_dot.vel.y = x_dot.vel.y;
+        // updated_x_dot.vel.x = x_dot.vel.x;
+        // updated_x_dot.vel.y = x_dot.vel.y;
 
-        updated_x_dot.acc.x = acc.x;
-        updated_x_dot.acc.y = acc.y;
+        // updated_x_dot.acc.x = acc.x;
+        // updated_x_dot.acc.y = acc.y;
 
         params.x_dots[index] = updated_x_dot;
     }
@@ -359,18 +366,18 @@ __global__ void update_particle(int n, Particle *particles) {
     // StateDerivateCUDA *x_dot = params.x_dots;
     
     // RK2
-    // p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
-    // p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
+    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
 
-    // p.vel.x += params.x_dots[index].acc.x * dt;
-    // p.vel.y += params.x_dots[index].acc.y * dt;
-
-    // SIMPLER LOOKAHEAD
     p.vel.x += params.x_dots[index].acc.x * dt;
     p.vel.y += params.x_dots[index].acc.y * dt;
 
-    p.pos.x += p.vel.x * dt;
-    p.pos.y += p.vel.y * dt;
+    // SIMPLER LOOKAHEAD
+    // p.vel.x += params.x_dots[index].acc.x * dt;
+    // p.vel.y += params.x_dots[index].acc.y * dt;
+
+    // p.pos.x += p.vel.x * dt;
+    // p.pos.y += p.vel.y * dt;
 
     clamp_particle(p);
     
