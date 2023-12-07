@@ -11,13 +11,18 @@
 #define TWO_THIRDS 2.0f / 3.0f
 
 #define SMOOTH_RADIUS 1.0f
+#define SMOOTH_RADIUS_SQRT sqrt(SMOOTH_RADIUS)
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
-#define PRESSURE_RESPONSE 200.0f
+// #define PRESSURE_RESPONSE 200.0f CHAOS
+#define PRESSURE_RESPONSE 10.0f
 
-static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
-static const float normalizer = 1 / kernel_volume;
+// static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
+// static const float normalizer = 1 / kernel_volume;
+
+#define kernel_volume 32.0f / 105.0f * M_PI * SMOOTH_RADIUS_SQRT * SMOOTH_RADIUS2 * SMOOTH_RADIUS
+#define normalizer 105.f / (32.0f * M_PI * SMOOTH_RADIUS_SQRT * SMOOTH_RADIUS2 * SMOOTH_RADIUS)
 
 static float block_len;
 static int blocks_x;
@@ -76,23 +81,45 @@ struct CUDAParams {
 };
 __constant__ CUDAParams params;
 
+// __device__ float smoothing_kernal(float2 disp) {
+//     float dist = sqrtf(disp.x * disp.x + disp.y * disp.y);
+//     float offset = fmax(0.0f, SMOOTH_RADIUS - dist);
+//     return offset * offset * normalizer;
+// }
+
 __device__ float smoothing_kernal(float2 disp) {
-    float dist = sqrt(disp.x * disp.x + disp.y * disp.y);
-    float offset = fmax(0.0f, SMOOTH_RADIUS - dist);
-    return offset * offset * normalizer;
+    float dist = sqrtf(disp.x * disp.x + disp.y * disp.y);
+    if(dist > SMOOTH_RADIUS) return 0.0f;
+    dist = fmax(dist, 0.002f);
+    return (SMOOTH_RADIUS - dist) * (SMOOTH_RADIUS - dist) / sqrtf(dist) * normalizer;
 }
+
+// __device__ float2 smoothing_kernal_grad(float2 disp) {
+//     float dist2 = disp.x * disp.x + disp.y * disp.y;
+//     if(dist2 == 0.0f || dist2 > SMOOTH_RADIUS2)
+//         return make_float2(0.0f, 0.0f);
+    
+//     float dist = sqrt(dist2);
+//     float x = -2 * (SMOOTH_RADIUS - dist) * disp.x / dist * normalizer;
+//     float y = -2 * (SMOOTH_RADIUS - dist) * disp.y / dist * normalizer;
+//     return make_float2(x, y);
+// }
 
 __device__ float2 smoothing_kernal_grad(float2 disp) {
     float dist2 = disp.x * disp.x + disp.y * disp.y;
+    if(dist2 == 0.0f)
+        printf("wrong\n");
     if(dist2 == 0.0f || dist2 > SMOOTH_RADIUS2)
         return make_float2(0.0f, 0.0f);
     
-    float dist = sqrt(dist2);
-    float x = -2 * (SMOOTH_RADIUS - dist) * disp.x / dist * normalizer;
-    float y = -2 * (SMOOTH_RADIUS - dist) * disp.y / dist * normalizer;
+    float dist = sqrtf(dist2);
+    dist = fmax(dist, 0.002f);
+    float der = -(SMOOTH_RADIUS - dist) * (SMOOTH_RADIUS - dist) / (2 * powf(dist, 1.5f)) 
+        - 2 * (SMOOTH_RADIUS - dist) / sqrtf(dist);
+    float x = der * disp.x / dist * normalizer;
+    float y = der * disp.y / dist * normalizer;
     return make_float2(x, y);
 }
-
 
 __device__ __inline__ void print_particle(Particle &p) {
     printf("pos %d: (%f, %f), vel: (%f, %f)\n", p.id, p.pos.x, p.pos.y, p.vel.x, p.vel.y);
@@ -121,6 +148,8 @@ void show_device() {
 }
 
 void gpu_init(int n, float step, float desired_density, float w, float h) {
+
+    printf("volume: %f, inv: %f\n", kernel_volume, normalizer);
 
     // printf("size of float2: %ld\n", sizeof(float2));
 
@@ -435,18 +464,18 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         StateDerivateCUDA updated_x_dot;
 
         // RK2
-        // updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
-        // updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
+        updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
+        updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
 
-        // updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
-        // updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
+        updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
+        updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
 
         // SIMPLER LOOKAHEAD
-        updated_x_dot.vel.x = x_dot.vel.x;
-        updated_x_dot.vel.y = x_dot.vel.y;
+        // updated_x_dot.vel.x = x_dot.vel.x;
+        // updated_x_dot.vel.y = x_dot.vel.y;
 
-        updated_x_dot.acc.x = acc.x;
-        updated_x_dot.acc.y = acc.y;
+        // updated_x_dot.acc.x = acc.x;
+        // updated_x_dot.acc.y = acc.y;
 
         params.x_dots[index] = updated_x_dot;
     }
@@ -525,18 +554,18 @@ __global__ void update_particle(int n, Particle *particles) {
     // StateDerivateCUDA *x_dot = params.x_dots;
     
     // RK2
-    // p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
-    // p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
+    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
 
-    // p.vel.x += params.x_dots[index].acc.x * dt;
-    // p.vel.y += params.x_dots[index].acc.y * dt;
-
-    // SIMPLER LOOKAHEAD
     p.vel.x += params.x_dots[index].acc.x * dt;
     p.vel.y += params.x_dots[index].acc.y * dt;
 
-    p.pos.x += p.vel.x * dt;
-    p.pos.y += p.vel.y * dt;
+    // SIMPLER LOOKAHEAD
+    // p.vel.x += params.x_dots[index].acc.x * dt;
+    // p.vel.y += params.x_dots[index].acc.y * dt;
+
+    // p.pos.x += p.vel.x * dt;
+    // p.pos.y += p.vel.y * dt;
 
     clamp_particle(p);
     
