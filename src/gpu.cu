@@ -19,6 +19,7 @@
 static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 static const float normalizer = 1 / kernel_volume;
 
+
 struct StateDerivateCUDA {
     float2 vel;
     float2 acc;
@@ -47,6 +48,8 @@ struct CUDAParams {
     StateDerivateCUDA *x_dots;
 
     float desired_density;
+    float box_width;
+    float box_height;
 };
 __constant__ CUDAParams params;
 
@@ -130,7 +133,7 @@ void show_device() {
     printf("---------------------------------------------------------\n");   
 }
 
-void gpu_init(int n, float step, float desired_density) {
+void gpu_init(int n, float step, float desired_density, float w, float h) {
 
     // printf("size of float2: %ld\n", sizeof(float2));
 
@@ -151,6 +154,9 @@ void gpu_init(int n, float step, float desired_density) {
     p.desired_density = desired_density;
     p.x_dots = x_dots;
 
+    p.box_width = w;
+    p.box_height = h;
+
     status = SWAP_FIRST;
 
     // It is params, not &params
@@ -160,7 +166,6 @@ void gpu_init(int n, float step, float desired_density) {
 }
 
 void load_particles_to_gpu(Particle *p, int n) {
-    status = SWAP_FIRST;
     cudaMemcpy(particles, p, sizeof(Particle) * n, cudaMemcpyHostToDevice);
 }
 
@@ -298,9 +303,9 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 }
 
 // This function must have an argument to be effective
-// void set_status(SwapStatus s) {
-//     status = s;
-// }
+void unset_status() {
+    status = SWAP_FIRST;
+}
 
 void step_ahead_gpu(int n, Particle *dst_particles_swap) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -308,6 +313,65 @@ void step_ahead_gpu(int n, Particle *dst_particles_swap) {
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
     step_ahead<<<grid_dim, block_dim>>>(n, (Particle*)particles, (Particle*)particles_swap);
+
+    cudaDeviceSynchronize();
+
+    status = SWAP_SECOND;
+    cudaMemcpy(dst_particles_swap, particles_swap, n * sizeof(Particle), cudaMemcpyDeviceToHost);
+}
+
+__device__ inline void clamp_particle(Particle &p) {
+
+    float box_width = params.box_width;
+    float box_height = params.box_height;
+
+    if(p.pos.x > box_width / 2) {
+        p.pos.x = box_width - p.pos.x;
+        p.pos.x = fmax(p.pos.x, -box_width / 2);
+        p.vel.x = -fabs(p.vel.x);
+    } else if(p.pos.x < -box_width / 2) {
+        p.pos.x = -box_width - p.pos.x;
+        p.pos.x = fmin(p.pos.x, box_width / 2);
+        p.vel.x = fabs(p.vel.x);
+    }
+
+    if(p.pos.y > box_height / 2) {
+        p.pos.y = box_height - p.pos.y;
+        p.pos.y = fmax(p.pos.y, -box_height / 2);
+        p.vel.y = -fabs(p.vel.y);
+    } else if(p.pos.y < -box_height / 2) {
+        p.pos.y = -box_height - p.pos.y;
+        p.pos.y = fmin(p.pos.y, box_height / 2);
+        p.vel.y = fabs(p.vel.y);
+    }
+}
+
+__global__ void update_particle(int n, Particle *particles) {
+    int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
+    if(index >= n) return;
+
+    Particle p = particles[index];
+        
+    float dt = params.dt;
+    // StateDerivateCUDA *x_dot = params.x_dots;
+    
+    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
+    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+
+    p.vel.x += params.x_dots[index].acc.x * dt;
+    p.vel.y += params.x_dots[index].acc.y * dt;
+
+    clamp_particle(p);
+    
+    particles[index] = p;
+}
+
+void update_particles_gpu(int n, Particle *dst_particles_swap) {
+    int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    
+    dim3 grid_dim(num_blocks, 1);
+    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+    update_particle<<<grid_dim, block_dim>>>(n, (Particle*)particles);
 
     cudaDeviceSynchronize();
 
