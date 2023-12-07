@@ -10,6 +10,7 @@ find_package(GLEW REQUIRED)
 
 add_executable(renderer src/main.cpp)
 add_executable(renderer_gpu src/main_gpu.cpp src/gpu.cu)
+add_executable(test_merge_sort src/merge_sort.cu src/test_merge_sort.cpp)
 
 include_directories("${CMAKE_SOURCE_DIR}/src/include")
 include_directories(${OPENGL_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})

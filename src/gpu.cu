@@ -120,9 +120,23 @@ void show_device() {
     printf("---------------------------------------------------------\n");   
 }
 
+static inline int next_pow2(int n)
+{
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n++;
+    return n;
+}
+
 void gpu_init(int n, float step, float desired_density, float w, float h) {
 
     // printf("size of float2: %ld\n", sizeof(float2));
+
+    // int n_inflated = next_pow2(n);
 
     cudaMalloc(&particles, n * sizeof(Particle));
     cudaMalloc(&particles_swap, n * sizeof(Particle));
@@ -442,8 +456,15 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         // updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
 
         // SIMPLER LOOKAHEAD
-        updated_x_dot.vel.x = x_dot.vel.x;
-        updated_x_dot.vel.y = x_dot.vel.y;
+        // updated_x_dot.vel.x = x_dot.vel.x;
+        // updated_x_dot.vel.y = x_dot.vel.y;
+
+        // updated_x_dot.acc.x = acc.x;
+        // updated_x_dot.acc.y = acc.y;
+
+        // LEAPFROG
+        updated_x_dot.vel.x = x_dot.vel.x + acc.x * params.dt;
+        updated_x_dot.vel.y = x_dot.vel.y + acc.x * params.dt;
 
         updated_x_dot.acc.x = acc.x;
         updated_x_dot.acc.y = acc.y;
@@ -471,10 +492,16 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 
     Particle cur = particles[index];
 
-    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS * 10;
-    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS * 10;
-    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS * 10;
-    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS * 10;
+    // cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS * 10;
+    // cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS * 10;
+    // cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS * 10;
+    // cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS * 10;
+
+    // LEAPFROG
+    cur.pos.x += params.x_dots[index].vel.x * params.dt * 0.5;
+    cur.pos.y += params.x_dots[index].vel.y * params.dt * 0.5;
+    cur.vel.x += params.x_dots[index].acc.x * params.dt * 0.5;
+    cur.vel.y += params.x_dots[index].acc.y * params.dt * 0.5;
     
     update[index] = cur;
 }
@@ -532,11 +559,19 @@ __global__ void update_particle(int n, Particle *particles) {
     // p.vel.y += params.x_dots[index].acc.y * dt;
 
     // SIMPLER LOOKAHEAD
+    // p.vel.x += params.x_dots[index].acc.x * dt;
+    // p.vel.y += params.x_dots[index].acc.y * dt;
+
+    // p.pos.x += p.vel.x * dt;
+    // p.pos.y += p.vel.y * dt;
+
+    // LEAPFROG
+    Vec2 vel_prev = p.vel;
     p.vel.x += params.x_dots[index].acc.x * dt;
     p.vel.y += params.x_dots[index].acc.y * dt;
 
-    p.pos.x += p.vel.x * dt;
-    p.pos.y += p.vel.y * dt;
+    p.pos.x += (vel_prev.x + p.vel.x) * 0.5 * dt;
+    p.pos.y += (vel_prev.y + p.vel.y) * 0.5 * dt;
 
     clamp_particle(p);
     

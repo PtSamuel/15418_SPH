@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named test_merge_sort
+
+# Build rule for target.
+test_merge_sort: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_merge_sort
+.PHONY : test_merge_sort
+
+# fast build rule for target.
+test_merge_sort/fast:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/build
+.PHONY : test_merge_sort/fast
+
+#=============================================================================
 # Target rules for targets named renderer_gpu
 
 # Build rule for target.
@@ -217,6 +230,60 @@ src/main_gpu.cpp.s:
 	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.s
 .PHONY : src/main_gpu.cpp.s
 
+src/merge_sort.o: src/merge_sort.cu.o
+
+.PHONY : src/merge_sort.o
+
+# target to build an object file
+src/merge_sort.cu.o:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o
+.PHONY : src/merge_sort.cu.o
+
+src/merge_sort.i: src/merge_sort.cu.i
+
+.PHONY : src/merge_sort.i
+
+# target to preprocess a source file
+src/merge_sort.cu.i:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.i
+.PHONY : src/merge_sort.cu.i
+
+src/merge_sort.s: src/merge_sort.cu.s
+
+.PHONY : src/merge_sort.s
+
+# target to generate assembly for a file
+src/merge_sort.cu.s:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.s
+.PHONY : src/merge_sort.cu.s
+
+src/test_merge_sort.o: src/test_merge_sort.cpp.o
+
+.PHONY : src/test_merge_sort.o
+
+# target to build an object file
+src/test_merge_sort.cpp.o:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o
+.PHONY : src/test_merge_sort.cpp.o
+
+src/test_merge_sort.i: src/test_merge_sort.cpp.i
+
+.PHONY : src/test_merge_sort.i
+
+# target to preprocess a source file
+src/test_merge_sort.cpp.i:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.i
+.PHONY : src/test_merge_sort.cpp.i
+
+src/test_merge_sort.s: src/test_merge_sort.cpp.s
+
+.PHONY : src/test_merge_sort.s
+
+# target to generate assembly for a file
+src/test_merge_sort.cpp.s:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.s
+.PHONY : src/test_merge_sort.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -225,6 +292,7 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... test_merge_sort"
 	@echo "... renderer_gpu"
 	@echo "... renderer"
 	@echo "... src/gpu.o"
@@ -236,6 +304,12 @@ help:
 	@echo "... src/main_gpu.o"
 	@echo "... src/main_gpu.i"
 	@echo "... src/main_gpu.s"
+	@echo "... src/merge_sort.o"
+	@echo "... src/merge_sort.i"
+	@echo "... src/merge_sort.s"
+	@echo "... src/test_merge_sort.o"
+	@echo "... src/test_merge_sort.i"
+	@echo "... src/test_merge_sort.s"
 .PHONY : help
 
 
