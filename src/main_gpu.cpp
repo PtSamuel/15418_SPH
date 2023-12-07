@@ -623,6 +623,8 @@ int main() {
 
         load_particles_to_gpu(particles.data(), particles.size());
 
+        // set_status(SWAP_FIRST);
+
         // compute_densities_and_pressures();
         compute_densities_and_pressures_gpu(particles.data(), particles.size(), densities.data(), pressures.data());
         // compute_refs();

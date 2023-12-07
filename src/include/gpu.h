@@ -10,6 +10,6 @@ void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density,
 void compute_pressure_grads_newton_gpu(int n, Vec2* dst_pressure_grad);
 void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot);
 void step_ahead_gpu(int n, Particle *dst_particles_swap);
-void set_to_first();
+// void set_status(SwapStatus s);
 
 #endif

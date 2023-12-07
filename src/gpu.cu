@@ -28,7 +28,6 @@ enum SwapStatus {
     SWAP_FIRST,
     SWAP_SECOND
 };
-
 static SwapStatus status;
 
 static uchar1 *particles;
@@ -161,7 +160,7 @@ void gpu_init(int n, float step, float desired_density) {
 }
 
 void load_particles_to_gpu(Particle *p, int n) {
-    status == SWAP_FIRST;
+    status = SWAP_FIRST;
     cudaMemcpy(particles, p, sizeof(Particle) * n, cudaMemcpyHostToDevice);
 }
 
@@ -279,9 +278,6 @@ void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
 
     compute_x_dot<<<grid_dim, block_dim>>>(n, status);
 
-    if(status == SWAP_SECOND)
-        status = SWAP_FIRST;
-
     cudaDeviceSynchronize();
 
     cudaMemcpy(dst_x_dot, x_dots, n * sizeof(StateDerivative), cudaMemcpyDeviceToHost);
@@ -300,6 +296,11 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
     
     update[index] = cur;
 }
+
+// This function must have an argument to be effective
+// void set_status(SwapStatus s) {
+//     status = s;
+// }
 
 void step_ahead_gpu(int n, Particle *dst_particles_swap) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
