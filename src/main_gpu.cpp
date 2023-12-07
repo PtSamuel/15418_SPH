@@ -19,10 +19,10 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 127
+#define PARTICLE_TILE_NUMBER 32
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
-#define BOX_WIDTH 20.0f
+#define BOX_WIDTH 10.0f
 #define BOX_HEIGHT 10.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f

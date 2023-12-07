@@ -186,6 +186,8 @@ __global__ void partition_particles_to_block(int n, Particle *particles) {
 
     if(index >= num_partitions) return;
 
+    // printf("dealing block %d\n", index);
+
     int y = index / params.blocks_x;
     int x = index - y * params.blocks_x;
     
@@ -210,7 +212,7 @@ void partition_particles(int n) {
     int num_blocks = (num_partitions + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
-    dim3 block_dim(blocks_x, blocks_y);
+    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
     if(status == SWAP_DEFAULT)
         partition_particles_to_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
