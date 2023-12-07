@@ -107,9 +107,16 @@ __device__ float smoothing_kernal(float2 disp) {
 
 __device__ float2 smoothing_kernal_grad(float2 disp) {
     float dist2 = disp.x * disp.x + disp.y * disp.y;
-    if(dist2 == 0.0f)
-        printf("wrong\n");
-    if(dist2 == 0.0f || dist2 > SMOOTH_RADIUS2)
+    if(dist2 == 0.0f) {
+        float x = cosf(1.0f), y = sinf(1.0f);
+        float dist = 0.002f;
+        float der = -(SMOOTH_RADIUS - dist) * (SMOOTH_RADIUS - dist) / (2 * powf(dist, 1.5f)) 
+            - 2 * (SMOOTH_RADIUS - dist) / sqrtf(dist);
+        x *= der * normalizer;
+        y *= der * normalizer;
+        return make_float2(x, y);
+    }
+    if(dist2 > SMOOTH_RADIUS2)
         return make_float2(0.0f, 0.0f);
     
     float dist = sqrtf(dist2);
@@ -532,7 +539,7 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
     cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS * 10;
     cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS * 10;
 
-    clamp_particle(cur);
+    // clamp_particle(cur);
     
     update[index] = cur;
 }

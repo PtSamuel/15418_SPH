@@ -19,7 +19,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 64
+#define PARTICLE_TILE_NUMBER 128
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 10.0f
@@ -642,7 +642,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
         for(auto &p: particles)
-            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 4);
         
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
