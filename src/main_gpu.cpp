@@ -630,9 +630,6 @@ int main() {
 
         // check_closeness();
 
-        // std::string str;
-        // std::getline(std::cin, str);
-
         // compute_pressure_grads_newton();
 
         // compute_x_dot();
@@ -651,7 +648,11 @@ int main() {
         // compute_pressure_grads_newton();
         compute_pressure_grads_newton_gpu(particles.size(), pressure_grads.data());
 
-        increment_x_dot(0.75);
+        std::string str;
+        std::getline(std::cin, str);
+
+        // increment_x_dot(0.75);
+        compute_x_dot_gpu(particles.size(), x_dots.data());
         particles.swap(particles_swap);
 
         update_velocities();

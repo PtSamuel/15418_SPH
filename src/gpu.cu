@@ -29,7 +29,7 @@ enum SwapStatus {
     SWAP_SECOND
 };
 
-SwapStatus status;
+static SwapStatus status;
 
 static uchar1 *particles;
 static uchar1 *particles_swap;
@@ -161,6 +161,7 @@ void gpu_init(int n, float step, float desired_density) {
 }
 
 void load_particles_to_gpu(Particle *p, int n) {
+    status == SWAP_FIRST;
     cudaMemcpy(particles, p, sizeof(Particle) * n, cudaMemcpyHostToDevice);
 }
 
@@ -170,7 +171,11 @@ void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density,
     
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
-    compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+
+    printf("d/p: status = %d\n", status);
+    if(status == SWAP_FIRST)
+        compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+    else compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
 
@@ -218,7 +223,11 @@ void compute_pressure_grads_newton_gpu(int n, Vec2 *dst_grad) {
     
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
-    compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+
+    printf("pg: status = %d\n", status);
+    if(status == SWAP_FIRST)
+        compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+    else compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
 
@@ -234,14 +243,32 @@ __device__ inline float2 compute_acc(int index) {
     );
 }
 
-__global__ void compute_x_dot(int n, Particle *particles) {
+__global__ void compute_x_dot(int n, SwapStatus status) {
     int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
     if(index >= n) return;
 
-    Particle cur = particles[index];
+    if(status == SWAP_FIRST) {
+        Particle *particles = (Particle*)params.particles;
+        Particle cur = particles[index];
+        params.x_dots[index].vel = make_float2(cur.vel.x, cur.vel.y);
+        params.x_dots[index].acc = compute_acc(index);
+    } else {
+        Particle *particles = (Particle*)params.particles_swap;
+        Particle cur = particles[index];
+        float2 vel = make_float2(cur.vel.x, cur.vel.y);
+        float2 acc = compute_acc(index);
+        
+        StateDerivateCUDA x_dot = params.x_dots[index];
+        StateDerivateCUDA updated_x_dot;
 
-    params.x_dots[index].vel = make_float2(cur.vel.x, cur.vel.y);
-    params.x_dots[index].acc = compute_acc(index);
+        updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
+        updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
+
+        updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
+        updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
+
+        params.x_dots[index] = updated_x_dot;
+    }
 }
 
 void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
@@ -249,7 +276,11 @@ void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
     
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
-    compute_x_dot<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+
+    compute_x_dot<<<grid_dim, block_dim>>>(n, status);
+
+    if(status == SWAP_SECOND)
+        status = SWAP_FIRST;
 
     cudaDeviceSynchronize();
 
@@ -279,5 +310,6 @@ void step_ahead_gpu(int n, Particle *dst_particles_swap) {
 
     cudaDeviceSynchronize();
 
+    status = SWAP_SECOND;
     cudaMemcpy(dst_particles_swap, particles_swap, n * sizeof(Particle), cudaMemcpyDeviceToHost);
 }
