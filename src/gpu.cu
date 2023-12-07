@@ -26,10 +26,19 @@ struct StateDerivateCUDA {
 };
 
 enum SwapStatus {
-    SWAP_FIRST,
-    SWAP_SECOND
+    SWAP_DEFAULT,
+    SWAP_ALTERED
 };
 static SwapStatus status;
+
+// This function must have an argument to be effective
+void set_default() {
+    status = SWAP_DEFAULT;
+}
+
+void set_altered() {
+    status = SWAP_ALTERED;
+}
 
 static uchar1 *particles;
 static uchar1 *particles_swap;
@@ -157,7 +166,7 @@ void gpu_init(int n, float step, float desired_density, float w, float h) {
     p.box_width = w;
     p.box_height = h;
 
-    status = SWAP_FIRST;
+    status = SWAP_DEFAULT;
 
     // It is params, not &params
     // cudaMemcpyToSymbol(&params, &p, sizeof(CUDAParams));
@@ -176,7 +185,7 @@ void compute_densities_and_pressures_gpu(int n) {
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
     // printf("d/p: status = %d\n", status);
-    if(status == SWAP_FIRST)
+    if(status == SWAP_DEFAULT)
         compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles);
     else compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
@@ -225,7 +234,7 @@ void compute_pressure_grads_newton_gpu(int n) {
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
     // printf("pg: status = %d\n", status);
-    if(status == SWAP_FIRST)
+    if(status == SWAP_DEFAULT)
         compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles);
     else compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
@@ -245,7 +254,7 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
     int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
     if(index >= n) return;
 
-    if(status == SWAP_FIRST) {
+    if(status == SWAP_DEFAULT) {
         Particle *particles = (Particle*)params.particles;
         Particle cur = particles[index];
         params.x_dots[index].vel = make_float2(cur.vel.x, cur.vel.y);
@@ -296,11 +305,6 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
     update[index] = cur;
 }
 
-// This function must have an argument to be effective
-void unset_status() {
-    status = SWAP_FIRST;
-}
-
 void step_ahead_gpu(int n) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
@@ -309,8 +313,6 @@ void step_ahead_gpu(int n) {
     step_ahead<<<grid_dim, block_dim>>>(n, (Particle*)particles, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
-
-    status = SWAP_SECOND;
 }
 
 __device__ inline void clamp_particle(Particle &p) {
@@ -367,8 +369,5 @@ void update_particles_gpu(int n, Particle *dst_particles_swap) {
     update_particle<<<grid_dim, block_dim>>>(n, (Particle*)particles);
 
     cudaDeviceSynchronize();
-
-    status = SWAP_FIRST;
-
     cudaMemcpy(dst_particles_swap, particles, n * sizeof(Particle), cudaMemcpyDeviceToHost);
 }

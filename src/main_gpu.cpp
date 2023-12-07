@@ -624,7 +624,7 @@ int main() {
 
         distribute();
 
-        unset_status();
+        set_default();
 
         // set_status(SWAP_FIRST);
 
@@ -642,6 +642,7 @@ int main() {
 
         // step_ahead();
         step_ahead_gpu(particles.size());  
+        set_altered();
         particles.swap(particles_swap);
 
         distribute();
