@@ -171,7 +171,7 @@ void compute_densities_and_pressures_gpu(Particle *p, int n, float* dst_density,
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
-    printf("d/p: status = %d\n", status);
+    // printf("d/p: status = %d\n", status);
     if(status == SWAP_FIRST)
         compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles);
     else compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
@@ -223,7 +223,7 @@ void compute_pressure_grads_newton_gpu(int n, Vec2 *dst_grad) {
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
-    printf("pg: status = %d\n", status);
+    // printf("pg: status = %d\n", status);
     if(status == SWAP_FIRST)
         compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles);
     else compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
