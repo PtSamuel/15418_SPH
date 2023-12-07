@@ -435,18 +435,18 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         StateDerivateCUDA updated_x_dot;
 
         // RK2
-        updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
-        updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
+        // updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
+        // updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
 
-        updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
-        updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
+        // updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
+        // updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
 
         // SIMPLER LOOKAHEAD
-        // updated_x_dot.vel.x = x_dot.vel.x;
-        // updated_x_dot.vel.y = x_dot.vel.y;
+        updated_x_dot.vel.x = x_dot.vel.x;
+        updated_x_dot.vel.y = x_dot.vel.y;
 
-        // updated_x_dot.acc.x = acc.x;
-        // updated_x_dot.acc.y = acc.y;
+        updated_x_dot.acc.x = acc.x;
+        updated_x_dot.acc.y = acc.y;
 
         params.x_dots[index] = updated_x_dot;
     }
@@ -471,10 +471,10 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 
     Particle cur = particles[index];
 
-    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS;
-    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS;
-    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS;
-    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS;
+    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS * 10;
+    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS * 10;
+    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS * 10;
+    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS * 10;
     
     update[index] = cur;
 }
@@ -525,18 +525,18 @@ __global__ void update_particle(int n, Particle *particles) {
     // StateDerivateCUDA *x_dot = params.x_dots;
     
     // RK2
-    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
-    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+    // p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
+    // p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
 
-    p.vel.x += params.x_dots[index].acc.x * dt;
-    p.vel.y += params.x_dots[index].acc.y * dt;
-
-    // SIMPLER LOOKAHEAD
     // p.vel.x += params.x_dots[index].acc.x * dt;
     // p.vel.y += params.x_dots[index].acc.y * dt;
 
-    // p.pos.x += p.vel.x * dt;
-    // p.pos.y += p.vel.y * dt;
+    // SIMPLER LOOKAHEAD
+    p.vel.x += params.x_dots[index].acc.x * dt;
+    p.vel.y += params.x_dots[index].acc.y * dt;
+
+    p.pos.x += p.vel.x * dt;
+    p.pos.y += p.vel.y * dt;
 
     clamp_particle(p);
     
