@@ -14,7 +14,7 @@
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
 #define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
 
-#define PRESSURE_RESPONSE 200.0f
+#define PRESSURE_RESPONSE 1000.0f
 
 static const float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 static const float normalizer = 1 / kernel_volume;
@@ -268,17 +268,23 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         StateDerivateCUDA x_dot = params.x_dots[index];
         StateDerivateCUDA updated_x_dot;
 
-        updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
-        updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
+        // updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
+        // updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
 
-        updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
-        updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
+        // updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
+        // updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
+
+        updated_x_dot.vel.x = x_dot.vel.x;
+        updated_x_dot.vel.y = x_dot.vel.y;
+
+        updated_x_dot.acc.x = acc.x;
+        updated_x_dot.acc.y = acc.y;
 
         params.x_dots[index] = updated_x_dot;
     }
 }
 
-void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
+void compute_x_dot_gpu(int n) {
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
@@ -286,7 +292,7 @@ void compute_x_dot_gpu(int n, StateDerivative *dst_x_dot) {
 
     compute_x_dot<<<grid_dim, block_dim>>>(n, status);
 
-    cudaMemcpy(dst_x_dot, x_dots, sizeof(StateDerivateCUDA) * n, cudaMemcpyDeviceToHost);
+    // cudaMemcpy(dst_x_dot, x_dots, sizeof(StateDerivateCUDA) * n, cudaMemcpyDeviceToHost);
 
     cudaDeviceSynchronize();
 }
@@ -350,11 +356,17 @@ __global__ void update_particle(int n, Particle *particles) {
     float dt = params.dt;
     // StateDerivateCUDA *x_dot = params.x_dots;
     
-    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
-    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+    // p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
+    // p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+
+    // p.vel.x += params.x_dots[index].acc.x * dt;
+    // p.vel.y += params.x_dots[index].acc.y * dt;
 
     p.vel.x += params.x_dots[index].acc.x * dt;
     p.vel.y += params.x_dots[index].acc.y * dt;
+
+    p.pos.x += p.vel.x * dt;
+    p.pos.y += p.vel.y * dt;
 
     clamp_particle(p);
     

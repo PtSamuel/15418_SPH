@@ -19,7 +19,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 20
+#define PARTICLE_TILE_NUMBER 160
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
@@ -638,12 +638,12 @@ int main() {
         // compute_pressure_grads_newton();
 
         // compute_x_dot();
-        compute_x_dot_gpu(particles.size(), x_dots.data());
+        compute_x_dot_gpu(particles.size());
 
         // step_ahead();
         step_ahead_gpu(particles.size());  
         set_altered();
-        particles.swap(particles_swap);
+        // particles.swap(particles_swap);
 
         distribute();
 
@@ -658,8 +658,8 @@ int main() {
         // std::getline(std::cin, str);
 
         // increment_x_dot(0.75);
-        compute_x_dot_gpu(particles.size(), x_dots.data());
-        particles.swap(particles_swap);
+        compute_x_dot_gpu(particles.size());
+        // particles.swap(particles_swap);
 
         // update_velocities();
         update_particles_gpu(particles.size(), particles.data());
@@ -667,7 +667,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
         for(auto &p: particles)
-            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
         
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
