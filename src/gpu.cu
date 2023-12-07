@@ -268,12 +268,14 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         StateDerivateCUDA x_dot = params.x_dots[index];
         StateDerivateCUDA updated_x_dot;
 
+        // RK2
         // updated_x_dot.vel.x = x_dot.vel.x * 0.25 + vel.x * 0.75;
         // updated_x_dot.vel.y = x_dot.vel.y * 0.25 + vel.y * 0.75;
 
         // updated_x_dot.acc.x = x_dot.acc.x * 0.25 + acc.x * 0.75;
         // updated_x_dot.acc.y = x_dot.acc.y * 0.25 + acc.y * 0.75;
 
+        // SIMPLER LOOKAHEAD
         updated_x_dot.vel.x = x_dot.vel.x;
         updated_x_dot.vel.y = x_dot.vel.y;
 
@@ -356,12 +358,14 @@ __global__ void update_particle(int n, Particle *particles) {
     float dt = params.dt;
     // StateDerivateCUDA *x_dot = params.x_dots;
     
+    // RK2
     // p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
     // p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
 
     // p.vel.x += params.x_dots[index].acc.x * dt;
     // p.vel.y += params.x_dots[index].acc.y * dt;
 
+    // SIMPLER LOOKAHEAD
     p.vel.x += params.x_dots[index].acc.x * dt;
     p.vel.y += params.x_dots[index].acc.y * dt;
 
