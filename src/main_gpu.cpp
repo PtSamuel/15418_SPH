@@ -636,8 +636,8 @@ int main() {
         compute_x_dot_gpu(particles.size());
         update_particles_gpu(particles.size(), particles.data());
 
-        std::string str;
-        std::getline(std::cin, str);
+        // std::string str;
+        // std::getline(std::cin, str);
 
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);

@@ -252,57 +252,19 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
         cur.pos.x,
         cur.pos.y
     );
-
-    if(index == 0) {
-        printf("initially: %f, %f\n", pos.x, pos.y);
-
-        // THIS PRINTS NOTHING
-        uint test = 0;
-        for(int i = test - 1; i <= test + 1; i++) {
-            printf("1: %d\n", i);
-        }
-
-        // THIS PRINTS -1, 0, 1
-        int lo = test - 1;
-        int hi = test + 1;
-        for(int i = lo; i <= hi; i++) {
-            printf("2: %d\n", i);
-        }
-
-        for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
-            printf("x: %d\n", x);
-        int x1 = coords.x - 1, x2 = coords.x + 1;
-        int y1 = coords.x - 1, y2 = coords.y + 1;
-        for(int i = x1; i <= x2; i++)
-            printf("i: %d\n", i);
-        printf("%d, %d, %d, %d\n", x1, x2, y1, y2);
-        printf("%p\n", particles);
-    }
     
     float density = 0;
-    for(int x = coords.x - 1; x <= coords.x + 1; x++)
-        for(int y = coords.y - 1; y <= coords.y + 1; y++) {
-            if(index == 0) {
-                printf("cur: (%f, %f), (%d, %d), (x, y) = (%d, %d)\n", pos.x, pos.y, coords.x, coords.y, x, y);
-                if(x >= 0 && x < params.blocks_x && y >= 0 && y < params.blocks_y) {
-                    int block_index = y * params.blocks_x + x;
-                    printf("number of particles: %d\n", params.block_size_lookup[block_index]);
-                }
-                printf("particle 1: (%f, %f)\n", particles[1].pos.x, particles[1].pos.y);
-                printf("particle 20: (%f, %f)\n", particles[20].pos.x, particles[20].pos.y);
-                if(x == 1 && y == 1) {
-                    int block_index = y * params.blocks_x + x;
-                    Particle *block_particles = &params.blocks[n * block_index];
-                    printf("number: %d, self: %f, %f\n", params.block_size_lookup[block_index], block_particles[0].pos.x, block_particles[0].pos.y);
-                }
-            }
+    
+    // DON'T FORGET THE (INT)!!!!!!!
+    for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
+        for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
+            
             if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
                 continue;
+
             int block_index = y * params.blocks_x + x;
             Particle *block_particles = &params.blocks[n * block_index];
-            if(index == 0 && x == 1 && y == 1) {
-                printf("a, %d\n", params.block_size_lookup[block_index]);
-            }
+
             for(int i = 0; i < params.block_size_lookup[block_index]; i++) {
                 Particle p = block_particles[i];
                 float2 disp = make_float2(
@@ -310,41 +272,30 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
                     pos.y - p.pos.y
                 );
                 density += smoothing_kernal(disp);
-                if(index == 0 && x == 1 && y == 1 && params.block_size_lookup[block_index] != 0) {
-                    printf("index 0: %f\n", smoothing_kernal(disp));
-                    printf("density: %f\n", density);
-                }
-            }
-
-            if(index == 0) {
-                printf("finally: %f\n", density);
             }
         }
 
-    if(index == 0) {
-        printf("finally 2: %f\n", density);
-    }
+    // float density_ref = 0;
+    // for(int i = 0; i < n; i++) {
+    //     Particle p = particles[i];
 
-    float density_ref = 0;
-    for(int i = 0; i < n; i++) {
-        Particle p = particles[i];
-
-        float2 disp = make_float2(
-            pos.x - p.pos.x,
-            pos.y - p.pos.y
-        );
-        density_ref += smoothing_kernal(disp);
-    }
+    //     float2 disp = make_float2(
+    //         pos.x - p.pos.x,
+    //         pos.y - p.pos.y
+    //     );
+    //     density_ref += smoothing_kernal(disp);
+    // }
 
     // density = density_ref;
 
-    if(fabs(density - density_ref) > 1e-3 && index == 0) {
-        printf("particle: %d, error: %f, %f\n", index, density, density_ref);
-    }
+    // if(fabs(density - density_ref) > 1e-3) {
+    //     printf("particle: %d, error: %f, %f\n", index, density, density_ref);
+    // }
 
     // printf("%d: %f, %d\n", index, density, cur.id);
 
-    params.densities[index] = density_ref;
+    params.densities[index] = density;
+    
     float pressure = PRESSURE_RESPONSE * (density - params.desired_density);
     params.pressures[index] = pressure;
 }
