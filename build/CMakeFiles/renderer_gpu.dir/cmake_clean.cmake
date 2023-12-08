@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "../renderer_gpu"
   "../renderer_gpu.pdb"
+  "CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o"
   "CMakeFiles/renderer_gpu.dir/src/gpu.cu.o"
   "CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.o"
 )

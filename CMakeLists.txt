@@ -9,7 +9,7 @@ find_package(GLEW REQUIRED)
 
 
 add_executable(renderer src/main.cpp)
-add_executable(renderer_gpu src/main_gpu.cpp src/gpu.cu)
+add_executable(renderer_gpu src/main_gpu.cpp src/gpu.cu src/bitonic_sort.cu)
 add_executable(test_merge_sort src/bitonic_sort.cu src/test_bitonic_sort.cpp)
 
 include_directories("${CMAKE_SOURCE_DIR}/src/include")

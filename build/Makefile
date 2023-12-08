@@ -156,6 +156,7 @@ src/bitonic_sort.o: src/bitonic_sort.cu.o
 # target to build an object file
 src/bitonic_sort.cu.o:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o
 .PHONY : src/bitonic_sort.cu.o
 
 src/bitonic_sort.i: src/bitonic_sort.cu.i
@@ -165,6 +166,7 @@ src/bitonic_sort.i: src/bitonic_sort.cu.i
 # target to preprocess a source file
 src/bitonic_sort.cu.i:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.i
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.i
 .PHONY : src/bitonic_sort.cu.i
 
 src/bitonic_sort.s: src/bitonic_sort.cu.s
@@ -174,6 +176,7 @@ src/bitonic_sort.s: src/bitonic_sort.cu.s
 # target to generate assembly for a file
 src/bitonic_sort.cu.s:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.s
+	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.s
 .PHONY : src/bitonic_sort.cu.s
 
 src/gpu.o: src/gpu.cu.o

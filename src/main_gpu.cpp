@@ -16,10 +16,11 @@
 #include "Particle.h"
 #include "Timer.h"
 #include "gpu.h"
+#include "bitonic_sort.h"
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 256
+#define PARTICLE_TILE_NUMBER 16
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 10.0f

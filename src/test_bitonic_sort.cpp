@@ -12,16 +12,22 @@ int main() {
         // particles[i].block = i;
     }
 
-    particles[15].block = 15;
+    particles[2].block = 12;
+    particles[9].block = 12;
+    particles[15].block = 12;
+    particles[11].block = 12;
+
+    printf("before:\n");
     for(int i = 0; i < test_length; i++) {
         printf("%d: %d\n", particles[i].id, particles[i].block);
     }
 
     bitonic_sort(particles.data(), test_length);
 
-    // for(int i = 0; i < test_length; i++) {
-    //     printf("%d: %d\n", particles[i].id, particles[i].block);
-    // }
+    printf("after:\n");
+    for(int i = 0; i < test_length; i++) {
+        printf("%d: %d\n", particles[i].id, particles[i].block);
+    }
 
     return 0;
 }

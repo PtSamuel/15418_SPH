@@ -14,7 +14,7 @@ cmath
 
 ../src/include/bitonic_sort.h
 Particle.h
--
+../src/include/Particle.h
 
 /home/johnsmith/Desktop/15418_project/src/bitonic_sort.cu
 Particle.h

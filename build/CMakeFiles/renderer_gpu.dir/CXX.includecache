@@ -16,6 +16,10 @@ cmath
 chrono
 -
 
+../src/include/bitonic_sort.h
+Particle.h
+../src/include/Particle.h
+
 ../src/include/gpu.h
 Particle.h
 ../src/include/Particle.h
@@ -55,4 +59,6 @@ Timer.h
 /home/johnsmith/Desktop/15418_project/src/Timer.h
 gpu.h
 /home/johnsmith/Desktop/15418_project/src/gpu.h
+bitonic_sort.h
+/home/johnsmith/Desktop/15418_project/src/bitonic_sort.h
 
