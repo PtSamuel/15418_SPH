@@ -8,6 +8,22 @@
 // #define THREADS_PER_BLOCK BLOCK_DIM * BLOCK_DIM
 #define THREADS_PER_BLOCK (BLOCK_DIM * BLOCK_DIM)
 
+__device__ void cas(Particle *p1, Particle *p2, int polarity) {
+    if(!polarity) {
+        if(p1->block > p2->block) {
+            Particle temp = *p1;
+            *p1 = *p2;
+            *p2 = temp;
+        }
+    } else {
+        if(p1->block <= p2->block) {
+            Particle temp = *p1;
+            *p1 = *p2;
+            *p2 = temp;
+        }
+    }
+}
+
 __global__ void compare_and_swap(Particle *particles, int n, int stride, int groupsize) {
     int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
 
@@ -20,12 +36,18 @@ __global__ void compare_and_swap(Particle *particles, int n, int stride, int gro
 
     int sort_order = (groupstart / stride) % 2;
 
-    // printf("thread index: %d, groupstart: %d, subid: %d, matesubid: %d, order: %d\n", index, groupstart, groupsubid, groupmatesubid, sort_order);
+    printf("thread index: %d, groupstart: %d, subid: %d, matesubid: %d, order: %d\n", index, groupstart, groupsubid, groupmatesubid, sort_order);
+
+    // particles[groupstart + groupsubid].block = 0;
+    // particles[groupstart + groupmatesubid].block = 0;
+
+    cas(&particles[groupstart + groupsubid], &particles[groupstart + groupmatesubid], sort_order);
 }
 
 void bitonic_sort(Particle *p, int n) {
     Particle *particles;
-    cudaMemcpy(&particles, particles, sizeof(Particle) * n, cudaMemcpyHostToDevice);
+    cudaMalloc(&particles, sizeof(Particle) * n);
+    cudaMemcpy(particles, p, sizeof(Particle) * n, cudaMemcpyHostToDevice);
 
     int num_tasks = n / 2;
 
@@ -41,5 +63,11 @@ void bitonic_sort(Particle *p, int n) {
             cudaDeviceSynchronize();
         }
         stage *= 2;
+    }
+
+    cudaMemcpy(p, particles, sizeof(Particle) * n, cudaMemcpyDeviceToHost);
+
+    for(int i = 0; i < n; i++) {
+        printf("%d: %d\n", p[i].id, p[i].block);
     }
 }
