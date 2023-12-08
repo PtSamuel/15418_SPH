@@ -143,13 +143,17 @@ void gpu_init(int n, float step, float desired_density, float w, float h) {
 
     // int n_inflated = next_pow2(n);
 
+    block_len = SMOOTH_RADIUS;
+    blocks_x = static_cast<int>(std::ceil(w / block_len));
+    blocks_y = static_cast<int>(std::ceil(h / block_len));
+
     cudaMalloc(&particles, n * sizeof(Particle));
     cudaMalloc(&particles_swap, n * sizeof(Particle));
     cudaMalloc(&densities, n * sizeof(float));
     cudaMalloc(&pressures, n * sizeof(float));
     cudaMalloc(&pressure_grads, n * sizeof(float2));
     cudaMalloc(&x_dots, n * sizeof(StateDerivateCUDA));
-    cudaMalloc(&dividers, n * sizeof(int));
+    cudaMalloc(&dividers, blocks_x * blocks_y * sizeof(int));
 
     CUDAParams p;
     p.dt = step;
@@ -165,10 +169,6 @@ void gpu_init(int n, float step, float desired_density, float w, float h) {
     p.box_height = h;
 
     status = SWAP_DEFAULT;
-
-    block_len = SMOOTH_RADIUS;
-    blocks_x = static_cast<int>(std::ceil(w / block_len));
-    blocks_y = static_cast<int>(std::ceil(h / block_len));
 
     p.block_len = block_len;
     p.blocks_x = blocks_x;
@@ -268,6 +268,8 @@ __global__ void compute_particle_block(int n, Particle* particles) {
 
     uint2 coords = get_block(p.pos);
     p.block = coords.y * params.blocks_x + coords.x;
+
+    // printf("particle %d: block index %d\n", p.id, p.block);
 }
 
 
@@ -285,6 +287,13 @@ __global__ void find_dividers(int n, Particle *particles) {
         }
         blockprev = blocknext;
     }
+
+    // for(int i = 0; i < n; i++) {
+    //     printf("particle index %d, block index %d\n", particles[i].id, particles[i].block);
+    // }
+
+    // for(int i = 0; i < num_blocks; i++)
+    //     printf("dividers[%d] = %d\n", i, params.dividers[i]);
 }
 
 void partition_particles(int n) {
@@ -354,10 +363,10 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
             }
         }
 
-    params.densities[cur.id] = density;
+    params.densities[index] = density;
     
     float pressure = PRESSURE_RESPONSE * (density - params.desired_density);
-    params.pressures[cur.id] = pressure;
+    params.pressures[index] = pressure;
     
     // DON'T FORGET THE (INT)!!!!!!!
     // for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
@@ -469,7 +478,7 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
             }
         }
 
-    params.pressure_grads[cur.id] = grad;
+    params.pressure_grads[index] = grad;
 
     // for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
     //     for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
