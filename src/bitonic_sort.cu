@@ -9,14 +9,15 @@
 #define THREADS_PER_BLOCK (BLOCK_DIM * BLOCK_DIM)
 
 __device__ void cas(Particle *p1, Particle *p2, int polarity) {
+    bool misordered = p1->block > p2->block || (p1->block == p2->block && p1->id > p2->id);
     if(!polarity) {
-        if(p1->block > p2->block) {
+        if(misordered) {
             Particle temp = *p1;
             *p1 = *p2;
             *p2 = temp;
         }
     } else {
-        if(p1->block <= p2->block) {
+        if(!misordered) {
             Particle temp = *p1;
             *p1 = *p2;
             *p2 = temp;
