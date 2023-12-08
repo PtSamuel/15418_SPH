@@ -1,1 +1,1 @@
-/usr/bin/c++     CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o  -o ../test_merge_sort   -L/usr/lib/x86_64-linux-gnu/stubs  -L/usr/lib/gcc/x86_64-linux-gnu/8  -lcudadevrt -lcudart_static -lrt -lpthread -ldl 
+/usr/bin/c++     CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o  -o ../test_merge_sort   -L/usr/lib/x86_64-linux-gnu/stubs  -L/usr/lib/gcc/x86_64-linux-gnu/8  -lcudadevrt -lcudart_static -lrt -lpthread -ldl 

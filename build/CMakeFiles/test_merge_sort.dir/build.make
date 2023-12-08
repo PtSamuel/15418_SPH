@@ -57,42 +57,42 @@ include CMakeFiles/test_merge_sort.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/test_merge_sort.dir/flags.make
 
-CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o: CMakeFiles/test_merge_sort.dir/flags.make
-CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o: ../src/merge_sort.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CUDA object CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o"
-	/usr/bin/nvcc  $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -x cu -c /home/johnsmith/Desktop/15418_project/src/merge_sort.cu -o CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o
+CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o: CMakeFiles/test_merge_sort.dir/flags.make
+CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o: ../src/bitonic_sort.cu
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CUDA object CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o"
+	/usr/bin/nvcc  $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -x cu -c /home/johnsmith/Desktop/15418_project/src/bitonic_sort.cu -o CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o
 
-CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CUDA source to CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.i"
+CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CUDA source to CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.i"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
 
-CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.s"
+CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
-CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o: CMakeFiles/test_merge_sort.dir/flags.make
-CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o: ../src/test_merge_sort.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o -c /home/johnsmith/Desktop/15418_project/src/test_merge_sort.cpp
+CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o: CMakeFiles/test_merge_sort.dir/flags.make
+CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o: ../src/test_bitonic_sort.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o -c /home/johnsmith/Desktop/15418_project/src/test_bitonic_sort.cpp
 
-CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/johnsmith/Desktop/15418_project/src/test_merge_sort.cpp > CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.i
+CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/johnsmith/Desktop/15418_project/src/test_bitonic_sort.cpp > CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.i
 
-CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/johnsmith/Desktop/15418_project/src/test_merge_sort.cpp -o CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.s
+CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/johnsmith/Desktop/15418_project/src/test_bitonic_sort.cpp -o CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.s
 
 # Object files for target test_merge_sort
 test_merge_sort_OBJECTS = \
-"CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o" \
-"CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o"
+"CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o" \
+"CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o"
 
 # External object files for target test_merge_sort
 test_merge_sort_EXTERNAL_OBJECTS =
 
-../test_merge_sort: CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o
-../test_merge_sort: CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o
+../test_merge_sort: CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o
+../test_merge_sort: CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o
 ../test_merge_sort: CMakeFiles/test_merge_sort.dir/build.make
 ../test_merge_sort: CMakeFiles/test_merge_sort.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable ../test_merge_sort"

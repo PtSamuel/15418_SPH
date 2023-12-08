@@ -5,7 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CUDA
-  "/home/johnsmith/Desktop/15418_project/src/merge_sort.cu" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o"
+  "/home/johnsmith/Desktop/15418_project/src/bitonic_sort.cu" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o"
   )
 set(CMAKE_CUDA_COMPILER_ID "NVIDIA")
 
@@ -14,7 +14,7 @@ set(CMAKE_CUDA_TARGET_INCLUDE_PATH
   "../src/include"
   )
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/johnsmith/Desktop/15418_project/src/test_merge_sort.cpp" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o"
+  "/home/johnsmith/Desktop/15418_project/src/test_bitonic_sort.cpp" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

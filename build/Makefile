@@ -149,6 +149,33 @@ renderer/fast:
 	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/build
 .PHONY : renderer/fast
 
+src/bitonic_sort.o: src/bitonic_sort.cu.o
+
+.PHONY : src/bitonic_sort.o
+
+# target to build an object file
+src/bitonic_sort.cu.o:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o
+.PHONY : src/bitonic_sort.cu.o
+
+src/bitonic_sort.i: src/bitonic_sort.cu.i
+
+.PHONY : src/bitonic_sort.i
+
+# target to preprocess a source file
+src/bitonic_sort.cu.i:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.i
+.PHONY : src/bitonic_sort.cu.i
+
+src/bitonic_sort.s: src/bitonic_sort.cu.s
+
+.PHONY : src/bitonic_sort.s
+
+# target to generate assembly for a file
+src/bitonic_sort.cu.s:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.s
+.PHONY : src/bitonic_sort.cu.s
+
 src/gpu.o: src/gpu.cu.o
 
 .PHONY : src/gpu.o
@@ -230,59 +257,32 @@ src/main_gpu.cpp.s:
 	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.s
 .PHONY : src/main_gpu.cpp.s
 
-src/merge_sort.o: src/merge_sort.cu.o
+src/test_bitonic_sort.o: src/test_bitonic_sort.cpp.o
 
-.PHONY : src/merge_sort.o
-
-# target to build an object file
-src/merge_sort.cu.o:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.o
-.PHONY : src/merge_sort.cu.o
-
-src/merge_sort.i: src/merge_sort.cu.i
-
-.PHONY : src/merge_sort.i
-
-# target to preprocess a source file
-src/merge_sort.cu.i:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.i
-.PHONY : src/merge_sort.cu.i
-
-src/merge_sort.s: src/merge_sort.cu.s
-
-.PHONY : src/merge_sort.s
-
-# target to generate assembly for a file
-src/merge_sort.cu.s:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/merge_sort.cu.s
-.PHONY : src/merge_sort.cu.s
-
-src/test_merge_sort.o: src/test_merge_sort.cpp.o
-
-.PHONY : src/test_merge_sort.o
+.PHONY : src/test_bitonic_sort.o
 
 # target to build an object file
-src/test_merge_sort.cpp.o:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.o
-.PHONY : src/test_merge_sort.cpp.o
+src/test_bitonic_sort.cpp.o:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o
+.PHONY : src/test_bitonic_sort.cpp.o
 
-src/test_merge_sort.i: src/test_merge_sort.cpp.i
+src/test_bitonic_sort.i: src/test_bitonic_sort.cpp.i
 
-.PHONY : src/test_merge_sort.i
+.PHONY : src/test_bitonic_sort.i
 
 # target to preprocess a source file
-src/test_merge_sort.cpp.i:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.i
-.PHONY : src/test_merge_sort.cpp.i
+src/test_bitonic_sort.cpp.i:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.i
+.PHONY : src/test_bitonic_sort.cpp.i
 
-src/test_merge_sort.s: src/test_merge_sort.cpp.s
+src/test_bitonic_sort.s: src/test_bitonic_sort.cpp.s
 
-.PHONY : src/test_merge_sort.s
+.PHONY : src/test_bitonic_sort.s
 
 # target to generate assembly for a file
-src/test_merge_sort.cpp.s:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_merge_sort.cpp.s
-.PHONY : src/test_merge_sort.cpp.s
+src/test_bitonic_sort.cpp.s:
+	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.s
+.PHONY : src/test_bitonic_sort.cpp.s
 
 # Help Target
 help:
@@ -295,6 +295,9 @@ help:
 	@echo "... test_merge_sort"
 	@echo "... renderer_gpu"
 	@echo "... renderer"
+	@echo "... src/bitonic_sort.o"
+	@echo "... src/bitonic_sort.i"
+	@echo "... src/bitonic_sort.s"
 	@echo "... src/gpu.o"
 	@echo "... src/gpu.i"
 	@echo "... src/gpu.s"
@@ -304,12 +307,9 @@ help:
 	@echo "... src/main_gpu.o"
 	@echo "... src/main_gpu.i"
 	@echo "... src/main_gpu.s"
-	@echo "... src/merge_sort.o"
-	@echo "... src/merge_sort.i"
-	@echo "... src/merge_sort.s"
-	@echo "... src/test_merge_sort.o"
-	@echo "... src/test_merge_sort.i"
-	@echo "... src/test_merge_sort.s"
+	@echo "... src/test_bitonic_sort.o"
+	@echo "... src/test_bitonic_sort.i"
+	@echo "... src/test_bitonic_sort.s"
 .PHONY : help
 
 

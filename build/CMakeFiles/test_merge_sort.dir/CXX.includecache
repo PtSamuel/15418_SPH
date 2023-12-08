@@ -6,17 +6,3 @@
 
 #IncludeRegexTransform: 
 
-../src/include/Particle.h
-cassert
--
-cmath
--
-
-../src/include/merge_sort.h
-
-/home/johnsmith/Desktop/15418_project/src/test_merge_sort.cpp
-Particle.h
-/home/johnsmith/Desktop/15418_project/src/Particle.h
-merge_sort.h
-/home/johnsmith/Desktop/15418_project/src/merge_sort.h
-

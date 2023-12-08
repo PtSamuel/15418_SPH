@@ -49,6 +49,7 @@ struct Particle {
     int id;
     Vec2 pos;
     Vec2 vel;
+    int block;
 };
 
 struct StateDerivative {
