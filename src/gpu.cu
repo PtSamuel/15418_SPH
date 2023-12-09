@@ -838,10 +838,10 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 
     Particle cur = particles[index];
 
-    cur.pos.x += params.x_dots[cur.id].vel.x * params.dt * TWO_THIRDS;
-    cur.pos.y += params.x_dots[cur.id].vel.y * params.dt * TWO_THIRDS;
-    cur.vel.x += params.x_dots[cur.id].acc.x * params.dt * TWO_THIRDS;
-    cur.vel.y += params.x_dots[cur.id].acc.y * params.dt * TWO_THIRDS;
+    cur.pos.x += params.x_dots[cur.id].vel.x * params.dt * TWO_THIRDS * 10;
+    cur.pos.y += params.x_dots[cur.id].vel.y * params.dt * TWO_THIRDS * 10;
+    cur.vel.x += params.x_dots[cur.id].acc.x * params.dt * TWO_THIRDS * 10;
+    cur.vel.y += params.x_dots[cur.id].acc.y * params.dt * TWO_THIRDS * 10;
 
     // LEAPFROG
     // cur.pos.x += params.x_dots[index].vel.x * params.dt * 0.5;
