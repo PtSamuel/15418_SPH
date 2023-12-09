@@ -587,6 +587,21 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
     Particle cur = particles[index];
 
     uint2 coords = get_block(cur.pos);
+    
+    // int xstart = max(0, (int)coords.x - 1);
+    // int xend = min(params.blocks_x - 1, (int)coords.x + 1);
+
+    // int ystart = max(0, (int)coords.y - 1);
+    // int yend = min(params.blocks_y - 1, (int)coords.y + 1);
+
+    // for(int y = ystart; y <= yend; y++) {
+    //     int blockstart = y * params.blocks_x + xstart;
+    //     int blockend = y * params.blocks_x + xend;
+    //     for(int i = params.dividers[blockstart]; i < n; i++) {
+    //         if(particles[i].block)
+    //     }
+    // }
+    
 
     for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++)
         for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++) {

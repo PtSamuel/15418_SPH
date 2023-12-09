@@ -585,6 +585,11 @@ static void check_closeness() {
     }
 }
 
+void increment_time(Timer &timer, double &acc) {
+    acc += timer.time();
+    timer.reset();
+}
+
 int main() {
 
     gpu_init(particles.size(), dt, desired_density, BOX_WIDTH, BOX_HEIGHT);
@@ -614,7 +619,8 @@ int main() {
 
     load_particles_to_gpu(particles.data(), particles.size());
 
-    
+    static double times[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
     Timer duration;
 
     while(true) {
@@ -637,30 +643,45 @@ int main() {
 
         Timer timer;
         compute_densities_and_pressures_gpu(particles.size());
-        report_time(timer, "density & pressure");
+        increment_time(timer, times[0]);
+        // report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
-        report_time(timer, "pressure grad");
+        increment_time(timer, times[1]);
+
+        // report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
-        report_time(timer, "x dot");
+        increment_time(timer, times[2]);
+
+        // report_time(timer, "x dot");
 
         step_ahead_gpu(particles.size());  
-        report_time(timer, "step ahead");
+        increment_time(timer, times[3]);
+
+        // report_time(timer, "step ahead");
 
         set_altered();
 
         compute_densities_and_pressures_gpu(particles.size());
-        report_time(timer, "density & pressure");
+        increment_time(timer, times[4]);
+
+        // report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
-        report_time(timer, "pressure grad");
+        increment_time(timer, times[5]);
+
+        // report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
-        report_time(timer, "x dot");
+        increment_time(timer, times[6]);
+
+        // report_time(timer, "x dot");
 
         update_particles_gpu(particles.size(), particles.data());
-        report_time(timer, "update particles");
+        increment_time(timer, times[7]);
+
+        // report_time(timer, "update particles");
 
         // std::string str;
         // std::getline(std::cin, str);
@@ -693,6 +714,7 @@ int main() {
 
         if(frame % 100 == 0) {
             printf("fps: %f\n", 1 / running_duration);
+            printf("density & pressure: %lf\npressure grad: %lf\nx dot: %lf\nstep ahead: %lf\ndensity & pressure: %lf\npressure grad: %lf\nx dot: %lf\nupdate: %lf\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame, times[5] / frame, times[6] / frame, times[7] / frame);
         }
 
         // std::this_thread::sleep_for(std::chrono::seconds(1));
