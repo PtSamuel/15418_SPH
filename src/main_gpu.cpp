@@ -20,7 +20,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 256
+#define PARTICLE_TILE_NUMBER 512
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 10.0f
@@ -632,8 +632,8 @@ int main() {
         //         p.id, p.block);
         // }
 
-        if(glfwWindowShouldClose(window))
-            break;
+        // if(glfwWindowShouldClose(window))
+        //     break;
 
         duration.reset();
 
@@ -699,13 +699,13 @@ int main() {
         // glColor3f(1.0f, 1.0f, 1.0f);
         // drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        if(frame % 60 == 0) {
-            for(Particle &p: particles)
-                if(p.id == 0) {
-                    print_particle(p);
-                    break;
-                }
-        }
+        // if(frame % 60 == 0) {
+        //     for(Particle &p: particles)
+        //         if(p.id == 0) {
+        //             print_particle(p);
+        //             break;
+        //         }
+        // }
 
         // glfwSwapBuffers(window);
         // glfwPollEvents();

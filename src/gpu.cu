@@ -755,12 +755,16 @@ void compute_pressure_grads_newton_gpu(int n) {
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
+    Timer timer;
+
     // printf("pg: status = %d\n", status);
     if(status == SWAP_DEFAULT)
         compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles);
     else compute_pressure_grad_newton<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
+
+    report_time(timer, "pressure grad");
 }
 
 __device__ inline float2 compute_acc(int id) {
@@ -928,5 +932,5 @@ void update_particles_gpu(int n, Particle *dst_particles_swap) {
     update_particle<<<grid_dim, block_dim>>>(n, (Particle*)particles);
 
     cudaDeviceSynchronize();
-    cudaMemcpy(dst_particles_swap, particles, n * sizeof(Particle), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(dst_particles_swap, particles, n * sizeof(Particle), cudaMemcpyDeviceToHost);
 }
