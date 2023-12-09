@@ -459,7 +459,7 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
 void compute_densities_and_pressures_gpu(int n) {
 
-    partition_particles(n);
+    // partition_particles(n);
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     

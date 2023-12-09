@@ -644,13 +644,18 @@ int main() {
         // std::getline(std::cin, str);
 
         glClear(GL_COLOR_BUFFER_BIT);   
-        glColor3f(1.0f, 1.0f, 1.0f);
-        for(auto &p: particles)
+        for(auto &p: particles) {
+            if(p.id == 0)
+                glColor3f(1.0f, 0.0f, 0.0f);
+            else 
+                glColor3f(1.0f, 1.0f, 1.0f);
+
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+        }
         
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        if(frame == 200) {
+        if(frame % 10 == 0) {
             for(Particle &p: particles)
                 if(p.id == 0) {
                     print_particle(p);
