@@ -6,3 +6,37 @@
 
 #IncludeRegexTransform: 
 
+../src/include/Particle.h
+cassert
+-
+cmath
+-
+
+../src/include/Timer.h
+chrono
+-
+
+../src/include/bitonic_sort.h
+Particle.h
+../src/include/Particle.h
+
+../src/include/gpu.h
+Particle.h
+../src/include/Particle.h
+
+/home/johnsmith/Desktop/15418_project/src/gpu.cu
+string
+-
+math.h
+-
+cuda_runtime.h
+-
+gpu.h
+/home/johnsmith/Desktop/15418_project/src/gpu.h
+Particle.h
+/home/johnsmith/Desktop/15418_project/src/Particle.h
+Timer.h
+/home/johnsmith/Desktop/15418_project/src/Timer.h
+bitonic_sort.h
+/home/johnsmith/Desktop/15418_project/src/bitonic_sort.h
+

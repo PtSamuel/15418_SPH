@@ -399,7 +399,7 @@ void partition_particles(int n) {
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 
-    Timer timer;
+    // Timer timer;
 
     if(status == SWAP_DEFAULT) {
 
@@ -413,11 +413,11 @@ void partition_particles(int n) {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
 
-        report_time(timer, "find blocks");
+        // report_time(timer, "find blocks");
 
         bitonic_sort((Particle*)particles, n);
 
-        report_time(timer, "bitonic sort");
+        // report_time(timer, "bitonic sort");
 
         // printf("after:\n");
         // print_particles<<<1, 1>>>(n, (Particle*)particles);
@@ -425,7 +425,7 @@ void partition_particles(int n) {
         
         find_dividers(n, (Particle*)particles);
 
-        report_time(timer, "find dividers");
+        // report_time(timer, "find dividers");
 
 
     } else {
@@ -478,8 +478,8 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
     
     float density = 0;
 
-    for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
-        for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
+    for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++)
+        for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++) {
             
             if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
                 continue;
@@ -588,8 +588,8 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
     uint2 coords = get_block(cur.pos);
 
-    for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
-        for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
+    for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++)
+        for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++) {
             
             if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
                 continue;

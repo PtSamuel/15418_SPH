@@ -635,48 +635,48 @@ int main() {
 
         set_default();
 
-        // Timer timer;
+        Timer timer;
         compute_densities_and_pressures_gpu(particles.size());
-        // report_time(timer, "density & pressure");
+        report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
-        // report_time(timer, "pressure grad");
+        report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
-        // report_time(timer, "x dot");
+        report_time(timer, "x dot");
 
         step_ahead_gpu(particles.size());  
-        // report_time(timer, "step ahead");
+        report_time(timer, "step ahead");
 
         set_altered();
 
         compute_densities_and_pressures_gpu(particles.size());
-        // report_time(timer, "density & pressure");
+        report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
-        // report_time(timer, "pressure grad");
+        report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
-        // report_time(timer, "x dot");
+        report_time(timer, "x dot");
 
         update_particles_gpu(particles.size(), particles.data());
-        // report_time(timer, "update particles");
+        report_time(timer, "update particles");
 
         // std::string str;
         // std::getline(std::cin, str);
 
-        glClear(GL_COLOR_BUFFER_BIT);   
-        for(auto &p: particles) {
-            if(p.id == 255)
-                glColor3f(1.0f, 0.0f, 0.0f);
-            else 
-                glColor3f(1.0f, 1.0f, 1.0f);
+        // glClear(GL_COLOR_BUFFER_BIT);   
+        // for(auto &p: particles) {
+        //     if(p.id == 255)
+        //         glColor3f(1.0f, 0.0f, 0.0f);
+        //     else 
+        //         glColor3f(1.0f, 1.0f, 1.0f);
 
-            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
-        }
+        //     renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+        // }
         
-        glColor3f(1.0f, 1.0f, 1.0f);
-        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
+        // glColor3f(1.0f, 1.0f, 1.0f);
+        // drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
         if(frame % 60 == 0) {
             for(Particle &p: particles)
@@ -686,8 +686,8 @@ int main() {
                 }
         }
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        // glfwSwapBuffers(window);
+        // glfwPollEvents();
 
         running_duration = momentum * running_duration + (1 - momentum) * duration.time();
 
