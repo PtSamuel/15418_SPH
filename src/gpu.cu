@@ -562,7 +562,12 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
 void compute_densities_and_pressures_gpu(int n) {
 
+    // Timer timer;
+
     partition_particles(n);
+
+    // printf("partition takes %lf\n", timer.time());
+    // timer.reset();
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
@@ -575,6 +580,8 @@ void compute_densities_and_pressures_gpu(int n) {
     else compute_density_and_pressure<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
 
     cudaDeviceSynchronize();
+
+    // printf("compute takes %lf\n", timer.time());
 }
 
 __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
@@ -588,17 +595,47 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
     uint2 coords = get_block(cur.pos);
     
-    // int xstart = max(0, (int)coords.x - 1);
-    // int xend = min(params.blocks_x - 1, (int)coords.x + 1);
+    int xstart = max(0, (int)coords.x - 1);
+    int xend = min(params.blocks_x - 1, (int)coords.x + 1);
 
-    // int ystart = max(0, (int)coords.y - 1);
-    // int yend = min(params.blocks_y - 1, (int)coords.y + 1);
+    int ystart = max(0, (int)coords.y - 1);
+    int yend = min(params.blocks_y - 1, (int)coords.y + 1);
 
     // for(int y = ystart; y <= yend; y++) {
     //     int blockstart = y * params.blocks_x + xstart;
     //     int blockend = y * params.blocks_x + xend;
-    //     for(int i = params.dividers[blockstart]; i < n; i++) {
-    //         if(particles[i].block)
+        
+    //     int start = blockstart;
+    //     if(params.dividers[start] == -1)
+    //         start++;
+    //     if(params.dividers[start] == -1)
+    //         start++;
+    //     if(params.dividers[start] == -1)
+    //         start++;
+        
+    //     if(start > blockend)
+    //         continue;
+
+    //     for(int i = params.dividers[start]; i < n; i++) {
+    //         if(i == index) continue;
+
+    //         Particle p = particles[i];
+    //         if(p.block > blockend) {
+    //             break;
+    //         }
+
+    //         float2 disp = make_float2(
+    //             cur.pos.x - p.pos.x,
+    //             cur.pos.y - p.pos.y
+    //         );
+            
+    //         float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
+
+    //         float2 kernel_grad = smoothing_kernal_grad(disp);
+    //         grad = make_float2(
+    //             grad.x + kernel_grad.x * pressure / params.densities[p.id],
+    //             grad.y + kernel_grad.y * pressure / params.densities[p.id]
+    //         );
     //     }
     // }
     
