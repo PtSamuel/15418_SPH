@@ -305,12 +305,17 @@ void partition_particles(int n) {
 
     if(status == SWAP_DEFAULT) {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+        cudaDeviceSynchronize();
         bitonic_sort((Particle*)particles, n);
-        find_dividers<<<1, 1>>>(n, (Particle*)particles);
+        // find_dividers<<<1, 1>>>(n, (Particle*)particles);
+        // cudaDeviceSynchronize();
+
     } else {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
+        cudaDeviceSynchronize();
         bitonic_sort((Particle*)particles_swap, n);
-        find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
+        // find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
+        // cudaDeviceSynchronize();
     }
 
 }
@@ -415,7 +420,7 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
 void compute_densities_and_pressures_gpu(int n) {
 
-    // partition_particles(n);
+    partition_particles(n);
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
