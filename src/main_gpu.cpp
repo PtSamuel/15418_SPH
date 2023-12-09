@@ -652,7 +652,7 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT);   
         for(auto &p: particles) {
-            if(p.id == 0)
+            if(p.id == 255)
                 glColor3f(1.0f, 0.0f, 0.0f);
             else 
                 glColor3f(1.0f, 1.0f, 1.0f);

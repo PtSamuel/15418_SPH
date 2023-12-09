@@ -532,7 +532,7 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
             if(divider == -1)
                 continue;
 
-            for(int i = 0; i < n; i++) {
+            for(int i = divider; i < n; i++) {
                 
                 if(particles[i].block != block_index)
                     break;
@@ -614,11 +614,13 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
         );
     }
 
-    if(cur.id == 255)
+    if(cur.id == 255) {
+        
         if(fabs(grad_ref.x - grad.x) > 1e-3 || fabs(grad_ref.y - grad.y) > 1e-3) {
             printf("particle id: %d, ref: (%f, %f), actual: (%f, %f)\n", cur.id, grad_ref.x, grad_ref.y, grad.x, grad.y);
             assert(false);
         }
+    }
 
     // assert(fabs(grad_ref.x - grad.x) < 1e-4 && fabs(grad_ref.y - grad.y) < 1e-4);
 
