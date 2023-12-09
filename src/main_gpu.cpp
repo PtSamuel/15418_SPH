@@ -20,7 +20,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 16
+#define PARTICLE_TILE_NUMBER 256
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 10.0f
@@ -635,32 +635,32 @@ int main() {
 
         set_default();
 
-        Timer timer;
+        // Timer timer;
         compute_densities_and_pressures_gpu(particles.size());
-        report_time(timer, "density & pressure");
+        // report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
-        report_time(timer, "pressure grad");
+        // report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
-        report_time(timer, "x dot");
+        // report_time(timer, "x dot");
 
         step_ahead_gpu(particles.size());  
-        report_time(timer, "step ahead");
+        // report_time(timer, "step ahead");
 
         set_altered();
 
         compute_densities_and_pressures_gpu(particles.size());
-        report_time(timer, "density & pressure");
+        // report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
-        report_time(timer, "pressure grad");
+        // report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
-        report_time(timer, "x dot");
+        // report_time(timer, "x dot");
 
         update_particles_gpu(particles.size(), particles.data());
-        report_time(timer, "update particles");
+        // report_time(timer, "update particles");
 
         // std::string str;
         // std::getline(std::cin, str);

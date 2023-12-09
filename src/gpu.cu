@@ -4,6 +4,7 @@
 
 #include "gpu.h"
 #include "Particle.h"
+#include "Timer.h"
 #include "bitonic_sort.h"
 
 #define BLOCK_DIM 16
@@ -274,47 +275,47 @@ __global__ void compute_particle_block(int n, Particle* particles) {
 
 
 // SCAN EQUIVALENCE
-__global__ void find_dividers(int n, Particle *particles) {
-    int blockprev = -1;
-    int num_blocks = params.blocks_x * params.blocks_y;
-    for(int i = 0; i < num_blocks; i++)
-        params.dividers[i] = -1;
+// __global__ void find_divider(int n, Particle *particles) {
+//     int blockprev = -1;
+//     int num_blocks = params.blocks_x * params.blocks_y;
+//     for(int i = 0; i < num_blocks; i++)
+//         params.dividers[i] = -1;
 
-    for(int i = 0; i < n; i++) {
-        int blocknext = particles[i].block;
-        if(blockprev < blocknext) {
-            params.dividers[blocknext] = i;
-        }
-        blockprev = blocknext;
-    }
+//     for(int i = 0; i < n; i++) {
+//         int blocknext = particles[i].block;
+//         if(blockprev < blocknext) {
+//             params.dividers[blocknext] = i;
+//         }
+//         blockprev = blocknext;
+//     }
 
-    int sum = 0;
-    for(int i = 0; i < num_blocks; i++) {
-        if(params.dividers[i] == -1)
-            continue;
-        int blockindex = params.dividers[i];
-        int count = 0;
-        int j = blockindex;
-        while(j < n) {
-            if(particles[j].block == i)
-                count++;
-            j++;
-        }
-        sum += count;
-    }
+//     // int sum = 0;
+//     // for(int i = 0; i < num_blocks; i++) {
+//     //     if(params.dividers[i] == -1)
+//     //         continue;
+//     //     int blockindex = params.dividers[i];
+//     //     int count = 0;
+//     //     int j = blockindex;
+//     //     while(j < n) {
+//     //         if(particles[j].block == i)
+//     //             count++;
+//     //         j++;
+//     //     }
+//     //     sum += count;
+//     // }
 
-    if(sum != n) {
-        printf("sum = %d, expected %d\n", sum, n);
-        assert(false);
-    }
+//     // if(sum != n) {
+//     //     printf("sum = %d, expected %d\n", sum, n);
+//     //     assert(false);
+//     // }
 
-    // for(int i = 0; i < n; i++) {
-    //     printf("particle index %d, block index %d\n", particles[i].id, particles[i].block);
-    // }
+//     // for(int i = 0; i < n; i++) {
+//     //     printf("particle index %d, block index %d\n", particles[i].id, particles[i].block);
+//     // }
 
-    // for(int i = 0; i < num_blocks; i++)
-    //     printf("dividers[%d] = %d\n", i, params.dividers[i]);
-}
+//     // for(int i = 0; i < num_blocks; i++)
+//     //     printf("dividers[%d] = %d\n", i, params.dividers[i]);
+// }
 
 __global__ void mess(int n, Particle* particles) {
     for(int i = 0; i < n / 2; i++) {
@@ -336,12 +337,69 @@ __global__ void print_particles(int n, Particle* particles) {
     }
 }
 
+__global__ void init_divider(int num_find_divider_tasks) {
+    int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
+    if(index >= num_find_divider_tasks) return;
+    params.dividers[index] = -1;
+}
+
+
+__global__ void find_divider(int n, Particle *particles) {
+
+    int index = blockIdx.x * THREADS_PER_BLOCK + threadIdx.y * BLOCK_DIM + threadIdx.x;
+
+    if(index >= n) return;
+
+    int blockcur = particles[index].block;
+    if(index == 0)
+        params.dividers[blockcur] = index;
+    else {
+        int blockprev = particles[index - 1].block;
+        if(blockprev < blockcur)
+            params.dividers[blockcur] = index;
+    }
+    
+}
+
+static void init_dividers() {
+    int num_find_divider_tasks = blocks_x * blocks_y;
+    
+    int num_blocks = (num_find_divider_tasks + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+    dim3 grid_dim(num_blocks, 1);
+    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+
+    init_divider<<<grid_dim, block_dim>>>(num_find_divider_tasks);
+    cudaDeviceSynchronize();
+}
+
+static void find_dividers(int n, Particle* particles) {
+
+    init_dividers();
+    int num_find_divider_tasks = n;
+    
+    int num_blocks = (num_find_divider_tasks + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    
+    dim3 grid_dim(num_blocks, 1);
+    dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+
+    find_divider<<<grid_dim, block_dim>>>(n, (Particle*)particles);
+    cudaDeviceSynchronize();
+}
+
+static void report_time(Timer &t, const char *str) {
+    printf("%s took %f seconds\n", str, t.time());
+    t.reset();
+}
+
 void partition_particles(int n) {
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     dim3 grid_dim(num_blocks, 1);
     dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
+
+    Timer timer;
 
     if(status == SWAP_DEFAULT) {
 
@@ -355,14 +413,20 @@ void partition_particles(int n) {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
 
+        report_time(timer, "find blocks");
+
         bitonic_sort((Particle*)particles, n);
+
+        report_time(timer, "bitonic sort");
 
         // printf("after:\n");
         // print_particles<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
         
-        find_dividers<<<1, 1>>>(n, (Particle*)particles);
-        cudaDeviceSynchronize();
+        find_dividers(n, (Particle*)particles);
+
+        report_time(timer, "find dividers");
+
 
     } else {
 
@@ -383,8 +447,11 @@ void partition_particles(int n) {
         // print_particles<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
 
-        find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
-        cudaDeviceSynchronize();
+        // find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
+        // cudaDeviceSynchronize();
+
+        find_dividers(n, (Particle*)particles_swap);
+
     }
 
 }
@@ -487,21 +554,15 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
     // printf("%d: %f, %d\n", index, density, cur.id);
 
-    // params.densities[cur.id] = density;
-    
-    // float pressure = PRESSURE_RESPONSE * (density - params.desired_density);
-    // params.pressures[cur.id] = pressure;
-
-    params.densities[index] = density;
+    params.densities[cur.id] = density;
     
     float pressure = PRESSURE_RESPONSE * (density - params.desired_density);
-    params.pressures[index] = pressure;
+    params.pressures[cur.id] = pressure;
 }
 
 void compute_densities_and_pressures_gpu(int n) {
 
-    if(status == SWAP_DEFAULT)
-        partition_particles(n);
+    partition_particles(n);
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
@@ -549,19 +610,19 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
             
                 if(p.id == cur.id)
                     continue;
-                assert(params.densities[i] > 0);
+                assert(params.densities[p.id] > 0);
 
                 float2 disp = make_float2(
                     cur.pos.x - p.pos.x,
                     cur.pos.y - p.pos.y
                 );
                 
-                float pressure = (params.pressures[index] + params.pressures[i]) * 0.5f;
+                float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
 
                 float2 kernel_grad = smoothing_kernal_grad(disp);
                 grad = make_float2(
-                    grad.x + kernel_grad.x * pressure / params.densities[i],
-                    grad.y + kernel_grad.y * pressure / params.densities[i]
+                    grad.x + kernel_grad.x * pressure / params.densities[p.id],
+                    grad.y + kernel_grad.y * pressure / params.densities[p.id]
                 );
             }
         }
@@ -632,7 +693,7 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
     // assert(fabs(grad_ref.x - grad.x) < 1e-4 && fabs(grad_ref.y - grad.y) < 1e-4);
 
-    params.pressure_grads[index] = grad;
+    params.pressure_grads[cur.id] = grad;
 
 }
 
@@ -650,12 +711,12 @@ void compute_pressure_grads_newton_gpu(int n) {
     cudaDeviceSynchronize();
 }
 
-__device__ inline float2 compute_acc(int index) {
+__device__ inline float2 compute_acc(int id) {
     // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    float2 grad = params.pressure_grads[index];
+    float2 grad = params.pressure_grads[id];
     return make_float2(
-        grad.x * (-1.0 / params.densities[index]),
-        grad.y * (-1.0 / params.densities[index])
+        grad.x * (-1.0 / params.densities[id]),
+        grad.y * (-1.0 / params.densities[id])
     );
 }
 
@@ -666,15 +727,15 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
     if(status == SWAP_DEFAULT) {
         Particle *particles = (Particle*)params.particles;
         Particle cur = particles[index];
-        params.x_dots[index].vel = make_float2(cur.vel.x, cur.vel.y);
-        params.x_dots[index].acc = compute_acc(index);
+        params.x_dots[cur.id].vel = make_float2(cur.vel.x, cur.vel.y);
+        params.x_dots[cur.id].acc = compute_acc(cur.id);
     } else {
         Particle *particles = (Particle*)params.particles_swap;
         Particle cur = particles[index];
         float2 vel = make_float2(cur.vel.x, cur.vel.y);
-        float2 acc = compute_acc(index);
+        float2 acc = compute_acc(cur.id);
         
-        StateDerivateCUDA x_dot = params.x_dots[index];
+        StateDerivateCUDA x_dot = params.x_dots[cur.id];
         StateDerivateCUDA updated_x_dot;
 
         // RK2
@@ -698,7 +759,7 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         // updated_x_dot.acc.x = acc.x;
         // updated_x_dot.acc.y = acc.y;
 
-        params.x_dots[index] = updated_x_dot;
+        params.x_dots[cur.id] = updated_x_dot;
     }
 }
 
@@ -721,10 +782,10 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 
     Particle cur = particles[index];
 
-    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS;
-    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS;
-    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS;
-    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS;
+    cur.pos.x += params.x_dots[cur.id].vel.x * params.dt * TWO_THIRDS;
+    cur.pos.y += params.x_dots[cur.id].vel.y * params.dt * TWO_THIRDS;
+    cur.vel.x += params.x_dots[cur.id].acc.x * params.dt * TWO_THIRDS;
+    cur.vel.y += params.x_dots[cur.id].acc.y * params.dt * TWO_THIRDS;
 
     // LEAPFROG
     // cur.pos.x += params.x_dots[index].vel.x * params.dt * 0.5;
@@ -781,11 +842,11 @@ __global__ void update_particle(int n, Particle *particles) {
     // StateDerivateCUDA *x_dot = params.x_dots;
     
     // RK2
-    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
-    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+    p.pos.x += params.x_dots[p.id].vel.x * dt + params.x_dots[p.id].acc.x * dt * dt * 0.5;
+    p.pos.y += params.x_dots[p.id].vel.y * dt + params.x_dots[p.id].acc.y * dt * dt * 0.5;
 
-    p.vel.x += params.x_dots[index].acc.x * dt;
-    p.vel.y += params.x_dots[index].acc.y * dt;
+    p.vel.x += params.x_dots[p.id].acc.x * dt;
+    p.vel.y += params.x_dots[p.id].acc.y * dt;
 
     // SIMPLER LOOKAHEAD
     // p.vel.x += params.x_dots[index].acc.x * dt;

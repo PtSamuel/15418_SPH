@@ -6,6 +6,7 @@ CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o: ../src/include/bitonic_sort.h
 CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o: ../src/bitonic_sort.cu
 
 CMakeFiles/renderer_gpu.dir/src/gpu.cu.o: ../src/include/Particle.h
+CMakeFiles/renderer_gpu.dir/src/gpu.cu.o: ../src/include/Timer.h
 CMakeFiles/renderer_gpu.dir/src/gpu.cu.o: ../src/include/bitonic_sort.h
 CMakeFiles/renderer_gpu.dir/src/gpu.cu.o: ../src/include/gpu.h
 CMakeFiles/renderer_gpu.dir/src/gpu.cu.o: ../src/gpu.cu
