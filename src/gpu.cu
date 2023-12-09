@@ -316,21 +316,24 @@ void partition_particles(int n) {
     if(status == SWAP_DEFAULT) {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
-        mess<<<1, 1>>>(n, (Particle*)particles);
-        cudaDeviceSynchronize();
-        // bitonic_sort((Particle*)particles, n);
-        // find_dividers<<<1, 1>>>(n, (Particle*)particles);
+
+        // mess<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
+
+        bitonic_sort((Particle*)particles, n);
+        find_dividers<<<1, 1>>>(n, (Particle*)particles);
+        cudaDeviceSynchronize();
 
     } else {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
         cudaDeviceSynchronize();
-        // mess<<<1, 1>>>(n, (Particle*)particles_swap);
-        cudaDeviceSynchronize();
 
-        // bitonic_sort((Particle*)particles_swap, n);
-        // find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
+        // mess<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
+
+        bitonic_sort((Particle*)particles_swap, n);
+        find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
+        cudaDeviceSynchronize();
     }
 
 }
@@ -383,10 +386,10 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
     //         }
     //     }
 
-    // params.densities[index] = density;
+    // params.densities[cur.id] = density;
     
     // float pressure = PRESSURE_RESPONSE * (density - params.desired_density);
-    // params.pressures[index] = pressure;
+    // params.pressures[cur.id] = pressure;
     
     // DON'T FORGET THE (INT)!!!!!!!
     // for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
@@ -459,7 +462,7 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
     Particle cur = particles[index];
 
-    uint2 coords = get_block(cur.pos);
+    // uint2 coords = get_block(cur.pos);
 
     // for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
     //     for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
@@ -481,24 +484,24 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
             
     //             if(p.id == cur.id)
     //                 continue;
-    //             assert(params.densities[i] > 0);
+    //             assert(params.densities[p.id] > 0);
 
     //             float2 disp = make_float2(
     //                 cur.pos.x - p.pos.x,
     //                 cur.pos.y - p.pos.y
     //             );
                 
-    //             float pressure = (params.pressures[i] + params.pressures[index]) * 0.5f;
+    //             float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
 
     //             float2 kernel_grad = smoothing_kernal_grad(disp);
     //             grad = make_float2(
-    //                 grad.x + kernel_grad.x * pressure / params.densities[i],
-    //                 grad.y + kernel_grad.y * pressure / params.densities[i]
+    //                 grad.x + kernel_grad.x * pressure / params.densities[p.id],
+    //                 grad.y + kernel_grad.y * pressure / params.densities[p.id]
     //             );
     //         }
     //     }
 
-    // params.pressure_grads[index] = grad;
+    // params.pressure_grads[cur.id] = grad;
 
     // for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
     //     for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
@@ -574,12 +577,12 @@ void compute_pressure_grads_newton_gpu(int n) {
     cudaDeviceSynchronize();
 }
 
-__device__ inline float2 compute_acc(int index) {
+__device__ inline float2 compute_acc(int id) {
     // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    float2 grad = params.pressure_grads[index];
+    float2 grad = params.pressure_grads[id];
     return make_float2(
-        grad.x * (-1.0 / params.densities[index]),
-        grad.y * (-1.0 / params.densities[index])
+        grad.x * (-1.0 / params.densities[id]),
+        grad.y * (-1.0 / params.densities[id])
     );
 }
 
@@ -590,15 +593,15 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
     if(status == SWAP_DEFAULT) {
         Particle *particles = (Particle*)params.particles;
         Particle cur = particles[index];
-        params.x_dots[index].vel = make_float2(cur.vel.x, cur.vel.y);
-        params.x_dots[index].acc = compute_acc(index);
+        params.x_dots[cur.id].vel = make_float2(cur.vel.x, cur.vel.y);
+        params.x_dots[cur.id].acc = compute_acc(cur.id);
     } else {
         Particle *particles = (Particle*)params.particles_swap;
         Particle cur = particles[index];
         float2 vel = make_float2(cur.vel.x, cur.vel.y);
-        float2 acc = compute_acc(index);
+        float2 acc = compute_acc(cur.id);
         
-        StateDerivateCUDA x_dot = params.x_dots[index];
+        StateDerivateCUDA x_dot = params.x_dots[cur.id];
         StateDerivateCUDA updated_x_dot;
 
         // RK2
@@ -622,7 +625,7 @@ __global__ void compute_x_dot(int n, SwapStatus status) {
         // updated_x_dot.acc.x = acc.x;
         // updated_x_dot.acc.y = acc.y;
 
-        params.x_dots[index] = updated_x_dot;
+        params.x_dots[cur.id] = updated_x_dot;
     }
 }
 
@@ -645,10 +648,10 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 
     Particle cur = particles[index];
 
-    cur.pos.x += params.x_dots[index].vel.x * params.dt * TWO_THIRDS;
-    cur.pos.y += params.x_dots[index].vel.y * params.dt * TWO_THIRDS;
-    cur.vel.x += params.x_dots[index].acc.x * params.dt * TWO_THIRDS;
-    cur.vel.y += params.x_dots[index].acc.y * params.dt * TWO_THIRDS;
+    cur.pos.x += params.x_dots[cur.id].vel.x * params.dt * TWO_THIRDS;
+    cur.pos.y += params.x_dots[cur.id].vel.y * params.dt * TWO_THIRDS;
+    cur.vel.x += params.x_dots[cur.id].acc.x * params.dt * TWO_THIRDS;
+    cur.vel.y += params.x_dots[cur.id].acc.y * params.dt * TWO_THIRDS;
 
     // LEAPFROG
     // cur.pos.x += params.x_dots[index].vel.x * params.dt * 0.5;
@@ -705,11 +708,11 @@ __global__ void update_particle(int n, Particle *particles) {
     // StateDerivateCUDA *x_dot = params.x_dots;
     
     // RK2
-    p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;
-    p.pos.y += params.x_dots[index].vel.y * dt + params.x_dots[index].acc.y * dt * dt * 0.5;
+    p.pos.x += params.x_dots[p.id].vel.x * dt + params.x_dots[p.id].acc.x * dt * dt * 0.5;
+    p.pos.y += params.x_dots[p.id].vel.y * dt + params.x_dots[p.id].acc.y * dt * dt * 0.5;
 
-    p.vel.x += params.x_dots[index].acc.x * dt;
-    p.vel.y += params.x_dots[index].acc.y * dt;
+    p.vel.x += params.x_dots[p.id].acc.x * dt;
+    p.vel.y += params.x_dots[p.id].acc.y * dt;
 
     // SIMPLER LOOKAHEAD
     // p.vel.x += params.x_dots[index].acc.x * dt;
