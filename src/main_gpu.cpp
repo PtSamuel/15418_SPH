@@ -20,11 +20,11 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 32
+#define PARTICLE_TILE_NUMBER 16
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
-#define BOX_WIDTH 20.0f
-#define BOX_HEIGHT 20.0f
+#define BOX_WIDTH 10.0f
+#define BOX_HEIGHT 10.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
@@ -617,6 +617,13 @@ int main() {
     Timer duration;
 
     while(true) {
+        
+        // for(Particle &p: particles) {
+        //     printf("particle %d: (%f, %f), (%f, %f) block = %d\n", 
+        //         p.pos.x, p.pos.y,
+        //         p.vel.x, p.vel.x, 
+        //         p.id, p.block);
+        // }
 
         if(glfwWindowShouldClose(window))
             break;
@@ -640,8 +647,8 @@ int main() {
         compute_x_dot_gpu(particles.size());
         update_particles_gpu(particles.size(), particles.data());
 
-        // std::string str;
-        // std::getline(std::cin, str);
+        std::string str;
+        std::getline(std::cin, str);
 
         glClear(GL_COLOR_BUFFER_BIT);   
         for(auto &p: particles) {
@@ -653,9 +660,10 @@ int main() {
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
         }
         
+        glColor3f(1.0f, 1.0f, 1.0f);
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        if(frame % 10 == 0) {
+        if(frame % 200 == 0) {
             for(Particle &p: particles)
                 if(p.id == 0) {
                     print_particle(p);
