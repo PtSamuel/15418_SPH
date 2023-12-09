@@ -19,11 +19,11 @@
 #include "bitonic_sort.h"
 
 #define PARTICLES 10
-#define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 512
+#define PARTICLE_RADIUS 0.05f
+#define PARTICLE_TILE_NUMBER 32
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
-#define BOX_WIDTH 10.0f
+#define BOX_WIDTH 20.0f
 #define BOX_HEIGHT 10.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
@@ -686,29 +686,29 @@ int main() {
         // std::string str;
         // std::getline(std::cin, str);
 
-        // glClear(GL_COLOR_BUFFER_BIT);   
-        // for(auto &p: particles) {
-        //     if(p.id == 255)
-        //         glColor3f(1.0f, 0.0f, 0.0f);
-        //     else 
-        //         glColor3f(1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);   
+        for(auto &p: particles) {
+            if(p.id == 255)
+                glColor3f(1.0f, 0.0f, 0.0f);
+            else 
+                glColor3f(1.0f, 1.0f, 1.0f);
 
-        //     renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
-        // }
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+        }
         
-        // glColor3f(1.0f, 1.0f, 1.0f);
-        // drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        // if(frame % 60 == 0) {
-        //     for(Particle &p: particles)
-        //         if(p.id == 0) {
-        //             print_particle(p);
-        //             break;
-        //         }
-        // }
+        if(frame % 60 == 0) {
+            for(Particle &p: particles)
+                if(p.id == 0) {
+                    print_particle(p);
+                    break;
+                }
+        }
 
-        // glfwSwapBuffers(window);
-        // glfwPollEvents();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
 
         running_duration = momentum * running_duration + (1 - momentum) * duration.time();
 
