@@ -288,6 +288,26 @@ __global__ void find_dividers(int n, Particle *particles) {
         blockprev = blocknext;
     }
 
+    int sum = 0;
+    for(int i = 0; i < num_blocks; i++) {
+        if(params.dividers[i] == -1)
+            continue;
+        int blockindex = params.dividers[i];
+        int count = 0;
+        int j = blockindex;
+        while(j < n) {
+            if(particles[j].block == i)
+                count++;
+            j++;
+        }
+        sum += count;
+    }
+
+    if(sum != n) {
+        printf("sum = %d, expected %d\n", sum, n);
+        assert(false);
+    }
+
     // for(int i = 0; i < n; i++) {
     //     printf("particle index %d, block index %d\n", particles[i].id, particles[i].block);
     // }
@@ -317,12 +337,13 @@ void partition_particles(int n) {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
 
-        // mess<<<1, 1>>>(n, (Particle*)particles);
-        // cudaDeviceSynchronize();
-
-        bitonic_sort((Particle*)particles, n);
-        find_dividers<<<1, 1>>>(n, (Particle*)particles);
+        mess<<<1, 1>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
+
+        // bitonic_sort((Particle*)particles, n);
+        
+        // find_dividers<<<1, 1>>>(n, (Particle*)particles);
+        // cudaDeviceSynchronize();
 
     } else {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
@@ -331,9 +352,9 @@ void partition_particles(int n) {
         // mess<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
 
-        bitonic_sort((Particle*)particles_swap, n);
-        find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
-        cudaDeviceSynchronize();
+        // bitonic_sort((Particle*)particles_swap, n);
+        // find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
+        // cudaDeviceSynchronize();
     }
 
 }
@@ -430,15 +451,15 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
     // printf("%d: %f, %d\n", index, density, cur.id);
 
-    params.densities[index] = density_ref;
+    params.densities[cur.id] = density_ref;
     
     float pressure = PRESSURE_RESPONSE * (density_ref - params.desired_density);
-    params.pressures[index] = pressure;
+    params.pressures[cur.id] = pressure;
 }
 
 void compute_densities_and_pressures_gpu(int n) {
 
-    // partition_particles(n);
+    partition_particles(n);
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
@@ -541,25 +562,25 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
     
         if(p.id == cur.id)
             continue;
-        assert(params.densities[i] > 0);
+        assert(params.densities[p.id] > 0);
 
         float2 disp = make_float2(
             cur.pos.x - p.pos.x,
             cur.pos.y - p.pos.y
         );
         
-        float pressure = (params.pressures[i] + params.pressures[index]) * 0.5f;
+        float pressure = (params.pressures[p.id] + params.pressures[cur.id]) * 0.5f;
 
         float2 kernel_grad = smoothing_kernal_grad(disp);
         grad_ref = make_float2(
-            grad_ref.x + kernel_grad.x * pressure / params.densities[i],
-            grad_ref.y + kernel_grad.y * pressure / params.densities[i]
+            grad_ref.x + kernel_grad.x * pressure / params.densities[p.id],
+            grad_ref.y + kernel_grad.y * pressure / params.densities[p.id]
         );
     }
 
     // assert(fabs(grad_ref.x - grad.x) < 1e-4 && fabs(grad_ref.y - grad.y) < 1e-4);
 
-    params.pressure_grads[index] = grad_ref;
+    params.pressure_grads[cur.id] = grad_ref;
 
 }
 

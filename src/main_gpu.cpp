@@ -651,7 +651,11 @@ int main() {
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
         if(frame == 200) {
-            print_particle(particles[0]);
+            for(Particle &p: particles)
+                if(p.id == 0) {
+                    print_particle(p);
+                    break;
+                }
         }
 
         glfwSwapBuffers(window);
