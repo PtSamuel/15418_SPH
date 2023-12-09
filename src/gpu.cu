@@ -7,13 +7,13 @@
 #include "bitonic_sort.h"
 
 #define BLOCK_DIM 16
-#define THREADS_PER_BLOCK BLOCK_DIM * BLOCK_DIM
+#define THREADS_PER_BLOCK (BLOCK_DIM * BLOCK_DIM)
 
 #define TWO_THIRDS 2.0f / 3.0f
 
 #define SMOOTH_RADIUS 1.0f
-#define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
-#define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
+#define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
+#define SMOOTH_RADIUS4 (SMOOTH_RADIUS2 * SMOOTH_RADIUS2)
 
 #define PRESSURE_RESPONSE 200.0f
 
@@ -296,6 +296,16 @@ __global__ void find_dividers(int n, Particle *particles) {
     //     printf("dividers[%d] = %d\n", i, params.dividers[i]);
 }
 
+__global__ void mess(int n, Particle* particles) {
+    for(int i = 0; i < n / 2; i++) {
+        Particle temp1 = particles[i];
+        Particle temp2 = particles[n - 1 - i];
+
+        particles[i] = temp2;
+        particles[n - 1 - i] = temp1;
+    }
+}
+
 void partition_particles(int n) {
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -306,14 +316,19 @@ void partition_particles(int n) {
     if(status == SWAP_DEFAULT) {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
-        bitonic_sort((Particle*)particles, n);
+        mess<<<1, 1>>>(n, (Particle*)particles);
+        cudaDeviceSynchronize();
+        // bitonic_sort((Particle*)particles, n);
         // find_dividers<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
 
     } else {
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
         cudaDeviceSynchronize();
-        bitonic_sort((Particle*)particles_swap, n);
+        // mess<<<1, 1>>>(n, (Particle*)particles_swap);
+        cudaDeviceSynchronize();
+
+        // bitonic_sort((Particle*)particles_swap, n);
         // find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
         // cudaDeviceSynchronize();
     }
@@ -420,7 +435,7 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
 
 void compute_densities_and_pressures_gpu(int n) {
 
-    partition_particles(n);
+    // partition_particles(n);
 
     int num_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
