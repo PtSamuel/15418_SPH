@@ -601,83 +601,83 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
     int ystart = max(0, (int)coords.y - 1);
     int yend = min(params.blocks_y - 1, (int)coords.y + 1);
 
-    // for(int y = ystart; y <= yend; y++) {
-    //     int blockstart = y * params.blocks_x + xstart;
-    //     int blockend = y * params.blocks_x + xend;
+    for(int y = ystart; y <= yend; y++) {
+        int blockstart = y * params.blocks_x + xstart;
+        int blockend = y * params.blocks_x + xend;
         
-    //     int start = blockstart;
-    //     if(params.dividers[start] == -1)
-    //         start++;
-    //     if(params.dividers[start] == -1)
-    //         start++;
-    //     if(params.dividers[start] == -1)
-    //         start++;
+        int start = blockstart;
+        if(params.dividers[start] == -1)
+            start++;
+        if(params.dividers[start] == -1)
+            start++;
+        if(params.dividers[start] == -1)
+            start++;
         
-    //     if(start > blockend)
-    //         continue;
+        if(start > blockend)
+            continue;
 
-    //     for(int i = params.dividers[start]; i < n; i++) {
-    //         if(i == index) continue;
+        for(int i = params.dividers[start]; i < n; i++) {
+            if(i == index) continue;
 
-    //         Particle p = particles[i];
-    //         if(p.block > blockend) {
-    //             break;
-    //         }
+            Particle p = particles[i];
+            if(p.block > blockend) {
+                break;
+            }
 
-    //         float2 disp = make_float2(
-    //             cur.pos.x - p.pos.x,
-    //             cur.pos.y - p.pos.y
-    //         );
+            float2 disp = make_float2(
+                cur.pos.x - p.pos.x,
+                cur.pos.y - p.pos.y
+            );
             
-    //         float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
+            float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
 
-    //         float2 kernel_grad = smoothing_kernal_grad(disp);
-    //         grad = make_float2(
-    //             grad.x + kernel_grad.x * pressure / params.densities[p.id],
-    //             grad.y + kernel_grad.y * pressure / params.densities[p.id]
-    //         );
-    //     }
-    // }
+            float2 kernel_grad = smoothing_kernal_grad(disp);
+            grad = make_float2(
+                grad.x + kernel_grad.x * pressure / params.densities[p.id],
+                grad.y + kernel_grad.y * pressure / params.densities[p.id]
+            );
+        }
+    }
     
 
-    for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++)
-        for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++) {
+    // for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++)
+    //     for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++) {
             
-            if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
-                continue;
+    //         if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
+    //             continue;
 
-            int block_index = y * params.blocks_x + x;
-            int divider = params.dividers[block_index];
-            if(divider == -1)
-                continue;
+    //         int block_index = y * params.blocks_x + x;
+    //         int divider = params.dividers[block_index];
+    //         if(divider == -1)
+    //             continue;
 
-            // Bruh
-            // for(int i = 0; i < n; i++) {
-            for(int i = divider; i < n; i++) {
+    //         // Bruh
+    //         // for(int i = 0; i < n; i++) {
+    //         for(int i = divider; i < n; i++) {
                 
-                if(particles[i].block != block_index)
-                    break;
+    //             if(particles[i].block != block_index)
+    //                 break;
 
-                Particle p = particles[i];
+    //             Particle p = particles[i];
             
-                if(p.id == cur.id)
-                    continue;
-                assert(params.densities[p.id] > 0);
+    //             if(p.id == cur.id)
+    //                 continue;
+    //             assert(params.densities[p.id] > 0);
 
-                float2 disp = make_float2(
-                    cur.pos.x - p.pos.x,
-                    cur.pos.y - p.pos.y
-                );
+    //             float2 disp = make_float2(
+    //                 cur.pos.x - p.pos.x,
+    //                 cur.pos.y - p.pos.y
+    //             );
                 
-                float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
+    //             float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
 
-                float2 kernel_grad = smoothing_kernal_grad(disp);
-                grad = make_float2(
-                    grad.x + kernel_grad.x * pressure / params.densities[p.id],
-                    grad.y + kernel_grad.y * pressure / params.densities[p.id]
-                );
-            }
-        }
+    //             float2 kernel_grad = smoothing_kernal_grad(disp);
+    //             grad = make_float2(
+    //                 grad.x + kernel_grad.x * pressure / params.densities[p.id],
+    //                 grad.y + kernel_grad.y * pressure / params.densities[p.id]
+    //             );
+    //         }
+    //     }
 
     // params.pressure_grads[cur.id] = grad;
 
