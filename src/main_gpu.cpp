@@ -23,8 +23,8 @@
 #define PARTICLE_TILE_NUMBER 128
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
-#define BOX_WIDTH 20.0f
-#define BOX_HEIGHT 10.0f
+#define BOX_WIDTH 40.0f
+#define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
@@ -52,7 +52,10 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 static float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-static float desired_density = average_density;
+static float desired_density = average_density * 1.5;
+// static float desired_density = average_density * 0.67;
+// static float desired_density = average_density;
+
 
 static const float dt = 0.01;
 
