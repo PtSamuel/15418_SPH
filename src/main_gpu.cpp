@@ -647,8 +647,8 @@ int main() {
         compute_x_dot_gpu(particles.size());
         update_particles_gpu(particles.size(), particles.data());
 
-        std::string str;
-        std::getline(std::cin, str);
+        // std::string str;
+        // std::getline(std::cin, str);
 
         glClear(GL_COLOR_BUFFER_BIT);   
         for(auto &p: particles) {
@@ -663,7 +663,7 @@ int main() {
         glColor3f(1.0f, 1.0f, 1.0f);
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        if(frame % 200 == 0) {
+        if(frame % 60 == 0) {
             for(Particle &p: particles)
                 if(p.id == 0) {
                     print_particle(p);

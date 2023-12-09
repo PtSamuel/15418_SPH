@@ -348,18 +348,18 @@ void partition_particles(int n) {
         // mess<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
 
-        printf("before:\n");
-        print_particles<<<1, 1>>>(n, (Particle*)particles);
-        cudaDeviceSynchronize();
+        // printf("before:\n");
+        // print_particles<<<1, 1>>>(n, (Particle*)particles);
+        // cudaDeviceSynchronize();
 
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
 
         bitonic_sort((Particle*)particles, n);
 
-        printf("after:\n");
-        print_particles<<<1, 1>>>(n, (Particle*)particles);
-        cudaDeviceSynchronize();
+        // printf("after:\n");
+        // print_particles<<<1, 1>>>(n, (Particle*)particles);
+        // cudaDeviceSynchronize();
         
         find_dividers<<<1, 1>>>(n, (Particle*)particles);
         cudaDeviceSynchronize();
@@ -370,18 +370,18 @@ void partition_particles(int n) {
         // mess<<<1, 1>>>(n, (Particle*)particles);
         // cudaDeviceSynchronize();
 
-        printf("before:\n");
-        print_particles<<<1, 1>>>(n, (Particle*)particles_swap);
-        cudaDeviceSynchronize();
+        // printf("before:\n");
+        // print_particles<<<1, 1>>>(n, (Particle*)particles_swap);
+        // cudaDeviceSynchronize();
 
         compute_particle_block<<<grid_dim, block_dim>>>(n, (Particle*)particles_swap);
         cudaDeviceSynchronize();
 
         bitonic_sort((Particle*)particles_swap, n);
 
-        printf("after:\n");
-        print_particles<<<1, 1>>>(n, (Particle*)particles);
-        cudaDeviceSynchronize();
+        // printf("after:\n");
+        // print_particles<<<1, 1>>>(n, (Particle*)particles);
+        // cudaDeviceSynchronize();
 
         find_dividers<<<1, 1>>>(n, (Particle*)particles_swap);
         cudaDeviceSynchronize();
@@ -462,7 +462,6 @@ __global__ void compute_density_and_pressure(int n, Particle *particles) {
     //         }
     //     }
 
-    
 
     float density_ref = 0;
     for(int i = 0; i < n; i++) {
@@ -520,44 +519,44 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
     Particle cur = particles[index];
 
-    // uint2 coords = get_block(cur.pos);
+    uint2 coords = get_block(cur.pos);
 
-    // for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
-    //     for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
+    for(int x = (int)coords.x - 1; x <= (int)coords.x + 1; x++)
+        for(int y = (int)coords.y - 1; y <= (int)coords.y + 1; y++) {
             
-    //         if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
-    //             continue;
+            if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
+                continue;
 
-    //         int block_index = y * params.blocks_x + x;
-    //         int divider = params.dividers[block_index];
-    //         if(divider == -1)
-    //             continue;
+            int block_index = y * params.blocks_x + x;
+            int divider = params.dividers[block_index];
+            if(divider == -1)
+                continue;
 
-    //         for(int i = 0; i < n; i++) {
+            for(int i = 0; i < n; i++) {
                 
-    //             if(particles[i].block != block_index)
-    //                 break;
+                if(particles[i].block != block_index)
+                    break;
 
-    //             Particle p = particles[i];
+                Particle p = particles[i];
             
-    //             if(p.id == cur.id)
-    //                 continue;
-    //             assert(params.densities[p.id] > 0);
+                if(p.id == cur.id)
+                    continue;
+                assert(params.densities[p.id] > 0);
 
-    //             float2 disp = make_float2(
-    //                 cur.pos.x - p.pos.x,
-    //                 cur.pos.y - p.pos.y
-    //             );
+                float2 disp = make_float2(
+                    cur.pos.x - p.pos.x,
+                    cur.pos.y - p.pos.y
+                );
                 
-    //             float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
+                float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
 
-    //             float2 kernel_grad = smoothing_kernal_grad(disp);
-    //             grad = make_float2(
-    //                 grad.x + kernel_grad.x * pressure / params.densities[p.id],
-    //                 grad.y + kernel_grad.y * pressure / params.densities[p.id]
-    //             );
-    //         }
-    //     }
+                float2 kernel_grad = smoothing_kernal_grad(disp);
+                grad = make_float2(
+                    grad.x + kernel_grad.x * pressure / params.densities[p.id],
+                    grad.y + kernel_grad.y * pressure / params.densities[p.id]
+                );
+            }
+        }
 
     // params.pressure_grads[cur.id] = grad;
 
@@ -614,6 +613,12 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
             grad_ref.y + kernel_grad.y * pressure / params.densities[p.id]
         );
     }
+
+    if(cur.id == 255)
+        if(fabs(grad_ref.x - grad.x) > 1e-3 || fabs(grad_ref.y - grad.y) > 1e-3) {
+            printf("particle id: %d, ref: (%f, %f), actual: (%f, %f)\n", cur.id, grad_ref.x, grad_ref.y, grad.x, grad.y);
+            assert(false);
+        }
 
     // assert(fabs(grad_ref.x - grad.x) < 1e-4 && fabs(grad_ref.y - grad.y) < 1e-4);
 
