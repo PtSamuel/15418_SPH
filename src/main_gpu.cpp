@@ -686,29 +686,29 @@ int main() {
         // std::string str;
         // std::getline(std::cin, str);
 
-        // glClear(GL_COLOR_BUFFER_BIT);   
-        // for(auto &p: particles) {
-        //     if(p.id == 255)
-        //         glColor3f(1.0f, 0.0f, 0.0f);
-        //     else 
-        //         glColor3f(1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);   
+        for(auto &p: particles) {
+            if(p.id == 255)
+                glColor3f(1.0f, 0.0f, 0.0f);
+            else 
+                glColor3f(1.0f, 1.0f, 1.0f);
 
-        //     renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
-        // }
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+        }
         
-        // glColor3f(1.0f, 1.0f, 1.0f);
-        // drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        // if(frame % 60 == 0) {
-        //     for(Particle &p: particles)
-        //         if(p.id == 0) {
-        //             print_particle(p);
-        //             break;
-        //         }
-        // }
+        if(frame % 60 == 0) {
+            for(Particle &p: particles)
+                if(p.id == 0) {
+                    print_particle(p);
+                    break;
+                }
+        }
 
-        // glfwSwapBuffers(window);
-        // glfwPollEvents();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
 
         running_duration = momentum * running_duration + (1 - momentum) * duration.time();
 
