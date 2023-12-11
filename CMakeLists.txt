@@ -9,14 +9,19 @@ find_package(GLEW REQUIRED)
 
 
 add_executable(renderer src/main.cpp)
-add_executable(renderer_gpu src/main_gpu.cpp src/gpu.cu src/bitonic_sort.cu)
+add_executable(renderer_gpu_bitonic src/main_gpu.cpp src/gpu.cu src/bitonic_sort.cu)
 add_executable(test_merge_sort src/bitonic_sort.cu src/test_bitonic_sort.cpp)
+add_executable(renderer_cpu_blocks src/cpu_blocks.cpp)
 
 include_directories("${CMAKE_SOURCE_DIR}/src/include")
 include_directories(${OPENGL_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
-target_link_libraries(renderer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
-target_link_libraries(renderer_gpu ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CUDA_LIBRARIES})
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
+
+target_link_libraries(renderer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(renderer_gpu_bitonic ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CUDA_LIBRARIES})
+target_link_libraries(renderer_cpu_blocks ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CUDA_LIBRARIES})
+
 target_link_libraries(renderer glfw)
-target_link_libraries(renderer_gpu glfw)
+target_link_libraries(renderer_gpu_bitonic glfw)
+target_link_libraries(renderer_cpu_blocks glfw)

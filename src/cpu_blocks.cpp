@@ -17,7 +17,7 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 40
+#define PARTICLE_TILE_NUMBER 512
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
 #define BOX_WIDTH 20.0f
@@ -703,6 +703,10 @@ void report_time(Timer &t, const char *str) {
     printf("%s took %f seconds\n", str, t.time());
 }
 
+static void increment_time(Timer &timer, double &acc) {
+    acc += timer.time();
+    timer.reset();
+}
 
 int main() {
 
@@ -716,34 +720,56 @@ int main() {
     particles_swap = particles;
 
     Timer duration;
+    // distribute, density & pressure, grad, x dot, update 
+    static double times[] = { 0, 0, 0, 0, 0 };
 
-    while (!glfwWindowShouldClose(window)) {
+    for(int i = 0; i < 4; i++) {
 
         duration.reset();
 
         frame++;
 
         /* NEW WAY SEEMS TO WORK */ 
+        Timer timer;
+
         distribute();
+        increment_time(timer, times[0]);
 
         compute_densities();
+        increment_time(timer, times[1]);
+
         compute_pressures();
+        increment_time(timer, times[1]);
+
         compute_pressure_grads_particle();
+        increment_time(timer, times[2]);
 
         compute_x_dot();
+        increment_time(timer, times[3]);
 
-        step_ahead();  
+        step_ahead();
         particles.swap(particles_swap);
+        increment_time(timer, times[4]);
+
         distribute();
+        increment_time(timer, times[0]);
 
         compute_densities();
+        increment_time(timer, times[1]);
+
         compute_pressures();
+        increment_time(timer, times[1]);
+
         compute_pressure_grads_particle();
+        increment_time(timer, times[2]);
 
         increment_x_dot(0.75);
         particles.swap(particles_swap);
+        increment_time(timer, times[3]);
 
         update_velocities();
+        increment_time(timer, times[4]);
+
 
         glClear(GL_COLOR_BUFFER_BIT);   
         glColor3f(1.0f, 1.0f, 1.0f);
@@ -752,28 +778,14 @@ int main() {
         
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        // for(int i = 0; i < SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER; i++) {
-        //     Vec2 sample = samples[i];
-
-        //     glColor3f(0.0f, 1.0f, 0.0f);
-        //     renderCircle(sample.x, sample.y, 0.1);
-
-        //     draw_arrow(sample, compute_pressure_grad(sample));
-        // }
-
-        // report_time(time, "everything else");
-
-        if(frame == 200) {
-            print_particle(particles[0]);
-        }
-
         glfwSwapBuffers(window);
         glfwPollEvents();
 
         running_duration = momentum * running_duration + (1 - momentum) * duration.time();
 
-        if(frame % 100 == 0) {
+        if(frame % 4 == 0) {
             printf("fps: %f\n", 1 / running_duration);
+            printf("distribute: %.6g\ndensity & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nupdate: %.6g\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame);
         }
 
     }

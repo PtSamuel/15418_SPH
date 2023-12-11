@@ -124,17 +124,30 @@ test_merge_sort/fast:
 .PHONY : test_merge_sort/fast
 
 #=============================================================================
-# Target rules for targets named renderer_gpu
+# Target rules for targets named renderer_cpu_blocks
 
 # Build rule for target.
-renderer_gpu: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 renderer_gpu
-.PHONY : renderer_gpu
+renderer_cpu_blocks: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 renderer_cpu_blocks
+.PHONY : renderer_cpu_blocks
 
 # fast build rule for target.
-renderer_gpu/fast:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/build
-.PHONY : renderer_gpu/fast
+renderer_cpu_blocks/fast:
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/build
+.PHONY : renderer_cpu_blocks/fast
+
+#=============================================================================
+# Target rules for targets named renderer_gpu_bitonic
+
+# Build rule for target.
+renderer_gpu_bitonic: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 renderer_gpu_bitonic
+.PHONY : renderer_gpu_bitonic
+
+# fast build rule for target.
+renderer_gpu_bitonic/fast:
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/build
+.PHONY : renderer_gpu_bitonic/fast
 
 #=============================================================================
 # Target rules for targets named renderer
@@ -156,7 +169,7 @@ src/bitonic_sort.o: src/bitonic_sort.cu.o
 # target to build an object file
 src/bitonic_sort.cu.o:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/bitonic_sort.cu.o
 .PHONY : src/bitonic_sort.cu.o
 
 src/bitonic_sort.i: src/bitonic_sort.cu.i
@@ -166,7 +179,7 @@ src/bitonic_sort.i: src/bitonic_sort.cu.i
 # target to preprocess a source file
 src/bitonic_sort.cu.i:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.i
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.i
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/bitonic_sort.cu.i
 .PHONY : src/bitonic_sort.cu.i
 
 src/bitonic_sort.s: src/bitonic_sort.cu.s
@@ -176,8 +189,35 @@ src/bitonic_sort.s: src/bitonic_sort.cu.s
 # target to generate assembly for a file
 src/bitonic_sort.cu.s:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.s
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.s
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/bitonic_sort.cu.s
 .PHONY : src/bitonic_sort.cu.s
+
+src/cpu_blocks.o: src/cpu_blocks.cpp.o
+
+.PHONY : src/cpu_blocks.o
+
+# target to build an object file
+src/cpu_blocks.cpp.o:
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o
+.PHONY : src/cpu_blocks.cpp.o
+
+src/cpu_blocks.i: src/cpu_blocks.cpp.i
+
+.PHONY : src/cpu_blocks.i
+
+# target to preprocess a source file
+src/cpu_blocks.cpp.i:
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.i
+.PHONY : src/cpu_blocks.cpp.i
+
+src/cpu_blocks.s: src/cpu_blocks.cpp.s
+
+.PHONY : src/cpu_blocks.s
+
+# target to generate assembly for a file
+src/cpu_blocks.cpp.s:
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.s
+.PHONY : src/cpu_blocks.cpp.s
 
 src/gpu.o: src/gpu.cu.o
 
@@ -185,7 +225,7 @@ src/gpu.o: src/gpu.cu.o
 
 # target to build an object file
 src/gpu.cu.o:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/gpu.cu.o
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/gpu.cu.o
 .PHONY : src/gpu.cu.o
 
 src/gpu.i: src/gpu.cu.i
@@ -194,7 +234,7 @@ src/gpu.i: src/gpu.cu.i
 
 # target to preprocess a source file
 src/gpu.cu.i:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/gpu.cu.i
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/gpu.cu.i
 .PHONY : src/gpu.cu.i
 
 src/gpu.s: src/gpu.cu.s
@@ -203,7 +243,7 @@ src/gpu.s: src/gpu.cu.s
 
 # target to generate assembly for a file
 src/gpu.cu.s:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/gpu.cu.s
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/gpu.cu.s
 .PHONY : src/gpu.cu.s
 
 src/main.o: src/main.cpp.o
@@ -239,7 +279,7 @@ src/main_gpu.o: src/main_gpu.cpp.o
 
 # target to build an object file
 src/main_gpu.cpp.o:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.o
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/main_gpu.cpp.o
 .PHONY : src/main_gpu.cpp.o
 
 src/main_gpu.i: src/main_gpu.cpp.i
@@ -248,7 +288,7 @@ src/main_gpu.i: src/main_gpu.cpp.i
 
 # target to preprocess a source file
 src/main_gpu.cpp.i:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.i
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/main_gpu.cpp.i
 .PHONY : src/main_gpu.cpp.i
 
 src/main_gpu.s: src/main_gpu.cpp.s
@@ -257,7 +297,7 @@ src/main_gpu.s: src/main_gpu.cpp.s
 
 # target to generate assembly for a file
 src/main_gpu.cpp.s:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.s
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/src/main_gpu.cpp.s
 .PHONY : src/main_gpu.cpp.s
 
 src/test_bitonic_sort.o: src/test_bitonic_sort.cpp.o
@@ -296,11 +336,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... test_merge_sort"
-	@echo "... renderer_gpu"
+	@echo "... renderer_cpu_blocks"
+	@echo "... renderer_gpu_bitonic"
 	@echo "... renderer"
 	@echo "... src/bitonic_sort.o"
 	@echo "... src/bitonic_sort.i"
 	@echo "... src/bitonic_sort.s"
+	@echo "... src/cpu_blocks.o"
+	@echo "... src/cpu_blocks.i"
+	@echo "... src/cpu_blocks.s"
 	@echo "... src/gpu.o"
 	@echo "... src/gpu.i"
 	@echo "... src/gpu.s"

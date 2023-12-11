@@ -54,7 +54,8 @@ CMAKE_BINARY_DIR = /home/johnsmith/Desktop/15418_project/build
 
 # The main recursive "all" target.
 all: CMakeFiles/test_merge_sort.dir/all
-all: CMakeFiles/renderer_gpu.dir/all
+all: CMakeFiles/renderer_cpu_blocks.dir/all
+all: CMakeFiles/renderer_gpu_bitonic.dir/all
 all: CMakeFiles/renderer.dir/all
 
 .PHONY : all
@@ -66,7 +67,8 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/test_merge_sort.dir/clean
-clean: CMakeFiles/renderer_gpu.dir/clean
+clean: CMakeFiles/renderer_cpu_blocks.dir/clean
+clean: CMakeFiles/renderer_gpu_bitonic.dir/clean
 clean: CMakeFiles/renderer.dir/clean
 
 .PHONY : clean
@@ -78,7 +80,7 @@ clean: CMakeFiles/renderer.dir/clean
 CMakeFiles/test_merge_sort.dir/all:
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/depend
 	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=7,8,9 "Built target test_merge_sort"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=9,10,11 "Built target test_merge_sort"
 .PHONY : CMakeFiles/test_merge_sort.dir/all
 
 # Build rule for subdir invocation for target.
@@ -99,31 +101,58 @@ CMakeFiles/test_merge_sort.dir/clean:
 .PHONY : CMakeFiles/test_merge_sort.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/renderer_gpu.dir
+# Target rules for target CMakeFiles/renderer_cpu_blocks.dir
 
 # All Build rule for target.
-CMakeFiles/renderer_gpu.dir/all:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/depend
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=3,4,5,6 "Built target renderer_gpu"
-.PHONY : CMakeFiles/renderer_gpu.dir/all
+CMakeFiles/renderer_cpu_blocks.dir/all:
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/depend
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=3,4 "Built target renderer_cpu_blocks"
+.PHONY : CMakeFiles/renderer_cpu_blocks.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/renderer_gpu.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 4
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/renderer_gpu.dir/all
+CMakeFiles/renderer_cpu_blocks.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/renderer_cpu_blocks.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 0
-.PHONY : CMakeFiles/renderer_gpu.dir/rule
+.PHONY : CMakeFiles/renderer_cpu_blocks.dir/rule
 
 # Convenience name for target.
-renderer_gpu: CMakeFiles/renderer_gpu.dir/rule
+renderer_cpu_blocks: CMakeFiles/renderer_cpu_blocks.dir/rule
 
-.PHONY : renderer_gpu
+.PHONY : renderer_cpu_blocks
 
 # clean rule for target.
-CMakeFiles/renderer_gpu.dir/clean:
-	$(MAKE) -f CMakeFiles/renderer_gpu.dir/build.make CMakeFiles/renderer_gpu.dir/clean
-.PHONY : CMakeFiles/renderer_gpu.dir/clean
+CMakeFiles/renderer_cpu_blocks.dir/clean:
+	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/clean
+.PHONY : CMakeFiles/renderer_cpu_blocks.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/renderer_gpu_bitonic.dir
+
+# All Build rule for target.
+CMakeFiles/renderer_gpu_bitonic.dir/all:
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/depend
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=5,6,7,8 "Built target renderer_gpu_bitonic"
+.PHONY : CMakeFiles/renderer_gpu_bitonic.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/renderer_gpu_bitonic.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 4
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/renderer_gpu_bitonic.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 0
+.PHONY : CMakeFiles/renderer_gpu_bitonic.dir/rule
+
+# Convenience name for target.
+renderer_gpu_bitonic: CMakeFiles/renderer_gpu_bitonic.dir/rule
+
+.PHONY : renderer_gpu_bitonic
+
+# clean rule for target.
+CMakeFiles/renderer_gpu_bitonic.dir/clean:
+	$(MAKE) -f CMakeFiles/renderer_gpu_bitonic.dir/build.make CMakeFiles/renderer_gpu_bitonic.dir/clean
+.PHONY : CMakeFiles/renderer_gpu_bitonic.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/renderer.dir
