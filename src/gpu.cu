@@ -773,13 +773,13 @@ void compute_densities_and_pressures_gpu(int n) {
 
 __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
-    __shared__ float2 grads[8 * 8][9];
+    __shared__ float2 grads[16 * 16][2];
 
-    int block_assigned = threadIdx.z;
-    int index_in_block = threadIdx.y * 8 + threadIdx.x;
-    int index = blockIdx.x * 8 * 8 + index_in_block;
+    int task_id = threadIdx.z;
+    int index_in_block = threadIdx.y * 16 + threadIdx.x;
+    int index = blockIdx.x * 16 * 16 + index_in_block;
 
-    grads[index_in_block][block_assigned] = make_float2(0.0f, 0.0f);
+    grads[index_in_block][task_id] = make_float2(0.0f, 0.0f);
 
     if(index >= n) return;
 
@@ -788,62 +788,75 @@ __global__ void compute_pressure_grad_newton(int n, Particle *particles) {
 
     uint2 coords = get_block(cur.pos);
 
-    int xoffset = block_assigned % 3 - 1;
-    int yoffset = block_assigned / 3 - 1;
-
-    int x = coords.x + xoffset;
-    int y = coords.y + yoffset;
-
-    if(x < 0 || y < 0 || x >= params.blocks_x || y >= params.blocks_y)
-        return;
-
-    int block_index = y * params.blocks_x + x;
-    int divider = params.dividers[block_index];
-    for(int i = divider; i < n; i++) {
-        Particle p = particles[i];
-        if(p.block != block_index)
-            break;
-            
-        if(p.id == cur.id)
-            continue;
-        assert(params.densities[p.id] > 0);
-
-        float2 disp = make_float2(
-            cur.pos.x - p.pos.x,
-            cur.pos.y - p.pos.y
-        );
-        
-        float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
-
-        float2 kernel_grad = smoothing_kernal_grad(disp);
-        grad = make_float2(
-            grad.x + kernel_grad.x * pressure / params.densities[p.id],
-            grad.y + kernel_grad.y * pressure / params.densities[p.id]
-        );
+    int start, end;
+    if(task_id == 0) {
+        start = 0;
+        end = 5;
+    } else {
+        start = 5;
+        end = 9;
     }
-        
-    grads[index_in_block][block_assigned] = grad;
-    
-    __syncthreads();
 
-    if(block_assigned == 0) {
-        for(int i = 1; i < 9; i++) {
-            grads[index_in_block][0].x += grads[index_in_block][i].x;
-            grads[index_in_block][0].y += grads[index_in_block][i].y;
+    for(int rel = start; rel < end; rel++) {
+        
+        int xoffset = rel % 3 - 1;
+        int yoffset = rel / 3 - 1;
+        int x = coords.x + xoffset;
+        int y = coords.y + yoffset;
+        
+        if(x < 0 || x >= params.blocks_x || y < 0 || y >= params.blocks_y)
+            continue;
+
+        int block_index = y * params.blocks_x + x;
+        int divider = params.dividers[block_index];
+        if(divider == -1)
+            continue;
+
+        for(int i = divider; i < n; i++) {
+            
+            Particle p = particles[i];
+            if(p.block != block_index)
+                break;
+        
+            if(p.id == cur.id)
+                continue;
+            assert(params.densities[p.id] > 0);
+
+            float2 disp = make_float2(
+                cur.pos.x - p.pos.x,
+                cur.pos.y - p.pos.y
+            );
+            
+            float pressure = (params.pressures[cur.id] + params.pressures[p.id]) * 0.5f;
+
+            float2 kernel_grad = smoothing_kernal_grad(disp);
+            grad = make_float2(
+                grad.x + kernel_grad.x * pressure / params.densities[p.id],
+                grad.y + kernel_grad.y * pressure / params.densities[p.id]
+            );
         }
     }
 
-    params.pressure_grads[index] = grads[index_in_block][0];
+    grads[index_in_block][task_id] = grad;
 
+    __syncthreads();
+
+    if(task_id == 0) {
+        params.pressure_grads[cur.id] = make_float2(
+            grads[index_in_block][0].x + grads[index_in_block][1].x,
+            grads[index_in_block][0].y + grads[index_in_block][1].y
+        );
+    }
+    
 }
 
 void compute_pressure_grads_newton_gpu(int n) {
 
-    int particles_per_block = 8 * 8;
+    int particles_per_block = 16 * 16;
     int num_blocks = (n + particles_per_block - 1) / particles_per_block;
     
     dim3 grid_dim(num_blocks, 1);
-    dim3 block_dim(8, 8, 9);
+    dim3 block_dim(16, 16, 2);
 
     Timer timer;
 
