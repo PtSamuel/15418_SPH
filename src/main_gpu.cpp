@@ -22,7 +22,7 @@
 #define PARTICLE_RADIUS 0.1f
 #define PARTICLE_TILE_NUMBER 512
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.8f
+#define OCCUPANCY 0.98f
 #define BOX_WIDTH 10.0f
 #define BOX_HEIGHT 10.0f
 #define EPS 1e-3f
