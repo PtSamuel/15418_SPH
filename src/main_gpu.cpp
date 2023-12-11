@@ -22,9 +22,9 @@
 #define PARTICLE_RADIUS 0.1f
 #define PARTICLE_TILE_NUMBER 512
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.98f
-#define BOX_WIDTH 10.0f
-#define BOX_HEIGHT 10.0f
+#define OCCUPANCY 0.6f
+#define BOX_WIDTH 20.0f
+#define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
@@ -63,17 +63,6 @@ static float viewport_width;
 static float viewport_height;
 
 static std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER);
-
-static std::vector<float> densities(particles.size());
-static std::vector<float> pressures(particles.size());
-static std::vector<Vec2> pressure_grads(particles.size());
-static std::vector<StateDerivative> x_dots(particles.size());
-
-static std::vector<Particle> particles_swap(particles.size());
-
-static std::vector<StateDerivative> x_dots_swap(particles.size());
-
-static float max_density;
 
 static int frame = 0;
 
@@ -178,17 +167,6 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glLoadIdentity();
 
 }
-
-static void init_particles(std::vector<Particle> &particles) {
-    for(int i = 0; i < particles.size(); i++) {
-        auto &p = particles[i];
-        p.id = i;
-        p.pos.x = (distribution(gen) - 0.5) * BOX_WIDTH;
-        p.pos.y = (distribution(gen) - 0.5) * BOX_HEIGHT;
-        p.vel = {0, 0};
-    }
-}
-
 static void tile_particles(std::vector<Particle> &particles) {
     assert(particles.size() == PARTICLE_TILE_NUMBER* PARTICLE_TILE_NUMBER);
     for(int j = 0; j < PARTICLE_TILE_NUMBER; j++)
@@ -199,238 +177,6 @@ static void tile_particles(std::vector<Particle> &particles) {
             p.pos.x = (float)(i - PARTICLE_TILE_NUMBER * 0.5) / PARTICLE_TILE_NUMBER * OCCUPANCY * BOX_WIDTH;
             p.pos.y = (float)(j - PARTICLE_TILE_NUMBER * 0.5) / PARTICLE_TILE_NUMBER * OCCUPANCY * BOX_HEIGHT;
         }
-}
-
-static float smoothing_kernal(Vec2 disp) {
-    float dist = sqrt(disp.norm2());
-    float offset = std::max(0.0f, SMOOTH_RADIUS - dist);
-    return offset * offset * normalizer;
-}
-
-static Vec2 smoothing_kernal_grad(Vec2 disp) {
-    float dist2 = disp.norm2();
-    if(dist2 == 0.0f || dist2 > SMOOTH_RADIUS2)
-        return Vec2(0, 0);
-    
-    float dist = sqrt(dist2);
-
-    float x = -2 * (SMOOTH_RADIUS - dist) * disp.x / dist * normalizer;
-    float y = -2 * (SMOOTH_RADIUS - dist) * disp.y / dist * normalizer;
-    return Vec2(x, y);
-}
-
-
-static std::pair<int, int> get_block(Vec2 pos) {
-    int x = (pos.x + BOX_WIDTH / 2) / BLOCK_LEN;
-    int y = (pos.y + BOX_HEIGHT / 2) / BLOCK_LEN;
-    x = std::min(x, BLOCKS_X - 1);
-    y = std::min(y, BLOCKS_Y - 1);
-    return { x, y };
-}
-
-static void distribute() {
-    for(int i = 0; i < BLOCKS_X; i++) 
-        for(int j = 0; j < BLOCKS_Y; j++)
-            blocks[i][j].clear();
-    for(int i = 0; i < particles.size(); i++) {
-        Particle &p = particles[i];
-        auto coords = get_block(p.pos);
-        blocks[coords.first][coords.second].push_back(p);
-    }
-}
-
-static void sanity_check_blocks() {
-    int sum = 0;
-    for(int i = 0; i < BLOCKS_X; i++) 
-        for(int j = 0; j < BLOCKS_Y; j++) {
-            sum += blocks[i][j].size();
-            for(auto &p: blocks[i][j]) {
-                auto coords = get_block(p.pos);
-                assert(i == coords.first && j == coords.second);
-            }
-        }
-    printf("num particle: %d\n", sum);
-}
-
-static void report_block(Vec2 pos) {
-    auto coords = get_block(pos);
-    printf("(%f, %f), (%d, %d)\n", pos.x, pos.y, coords.first, coords.second);
-}
-
-static float compute_density(Vec2 pos) {
-    auto coords = get_block(pos);
-    int x = coords.first, y = coords.second;
-
-    float density = 0;
-
-    for(int i = x - 1; i <= x + 1; i++)
-        for(int j = y - 1; j <= y + 1; j++) {
-            if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
-                continue;
-            for(auto &p: blocks[i][j]) {
-                Vec2 disp = pos - p.pos;
-                density += smoothing_kernal(disp);
-            }
-        }
-
-    return density;
-}
-
-static void compute_densities() {
-    float max = 0;
-    for(int i = 0; i < particles.size(); i++) {
-        float density = compute_density(particles[i].pos);
-        densities[i] = density;
-        if(density > max)
-            max = density;
-    }
-    max_density = max;
-}
-
-static float compute_pressure(float density) {
-    return PRESSURE_RESPONSE * (density - desired_density);
-}
-
-static void compute_pressures() {
-    for(int i = 0; i < particles.size(); i++)
-        pressures[i] = compute_pressure(densities[i]);
-}
-
-
-static void compute_densities_and_pressures() {
-    float max = 0;
-    for(int i = 0; i < particles.size(); i++) {
-        float density = compute_density(particles[i].pos);
-        densities[i] = density;
-        if(density > max)
-            max = density;
-        pressures[i] = compute_pressure(densities[i]);
-    }
-    max_density = max;
-}
-
-static Vec2 compute_pressure_grad_newton(int index) {
-    Vec2 grad = Vec2(0.0f, 0.0f);
-    Vec2 pos = particles[index].pos;
-
-    auto coords = get_block(pos);
-    int x = coords.first, y = coords.second;
-    for(int i = x - 1; i <= x + 1; i++)
-        for(int j = y - 1; j <= y + 1; j++) {
-            if(i < 0 || i >= BLOCKS_X || j < 0 || j >= BLOCKS_Y)
-                continue;
-            
-            for(auto &p: blocks[i][j]) {
-                if(p.id == index)
-                    continue;
-                assert(densities[p.id] > 0);
-
-                float pressure = (pressures[p.id] + pressures[index]) * 0.5f;
-
-                Vec2 kernel_grad = smoothing_kernal_grad(pos - p.pos);
-                grad = grad + kernel_grad * (pressure / densities[p.id]);
-            }
-        }
-
-    return grad;
-
-}
-
-static void compute_pressure_grads_newton() {
-    for(int i = 0; i < particles.size(); i++)
-        pressure_grads[i] = compute_pressure_grad_newton(i);
-}
-
-static GLuint textureID;  // OpenGL texture ID
-
-static void computePixelValue(int x, int y) {
-    // This is a placeholder; replace it with your actual function
-    // return static_cast<float>(x) / BOX_WIDTH + static_cast<float>(y) / BOX_HEIGHT;
-    float density = compute_density(
-        Vec2(
-            (float)x / TEXTURE_SUBDIVS * BOX_WIDTH - BOX_WIDTH / 2, 
-            (float)y / TEXTURE_SUBDIVS * BOX_HEIGHT - BOX_HEIGHT / 2
-        )
-    ) / max_density;
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RED, GL_FLOAT, &density);
-}
-
-
-static void render_pressure(int x, int y) {
-    Vec2 pos = Vec2(
-        (float)x / TEXTURE_SUBDIVS * BOX_WIDTH - BOX_WIDTH / 2, 
-        (float)y / TEXTURE_SUBDIVS * BOX_HEIGHT - BOX_HEIGHT / 2
-    );
-    float density = compute_density(pos);
-    float pressure = compute_pressure(density);
-
-    float highest_pressure = 1000;
-
-    uint8_t color[] = {255, 255, 255, 255};
-   
-    float interp;
-    if(pressure > 0) {
-        interp = (uint8_t)(255 * (1 - pressure / highest_pressure));
-        color[1] = interp;
-        color[2] = interp;
-    } else { 
-        interp = (uint8_t)(255 * (1 - (desired_density - density) / desired_density));
-        color[0] = interp;
-        color[1] = interp;
-    }
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, color);
-
-}
-
-static void initializeTexture() {
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Create an empty texture with GL_RED format (grayscale)
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, TEXTURE_SUBDIVS, TEXTURE_SUBDIVS, 0, GL_RED, GL_FLOAT, nullptr);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXTURE_SUBDIVS, TEXTURE_SUBDIVS, 0, GL_RGBA,  GL_UNSIGNED_INT_8_8_8_8, nullptr);
-}
-
-static void updateTexture() {
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    // Update the texture data based on computePixelValue function
-    for (int y = 0; y < TEXTURE_SUBDIVS; ++y) {
-        for (int x = 0; x < TEXTURE_SUBDIVS; ++x) {
-            // computePixelValue(x, y);
-            render_pressure(x, y);
-        }
-    }
-}
-
-static void drawTexturedQuad() {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(-BOX_WIDTH/2.0f, -BOX_HEIGHT/2.0f);
-
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(BOX_WIDTH/2.0f, -BOX_HEIGHT/2.0f);
-
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(BOX_WIDTH/2.0f, BOX_HEIGHT/2.0f);
-
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex2f(-BOX_WIDTH/2.0f, BOX_HEIGHT/2.0f);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
 }
 
 static void draw_arrow(Vec2 start, Vec2 disp) {
@@ -461,131 +207,13 @@ static void draw_arrow(Vec2 start, Vec2 disp) {
     glEnd();
 }
 
-static inline void clamp_particle(Particle &p) {
-    if(p.pos.x > BOX_WIDTH / 2) {
-        p.pos.x = BOX_WIDTH - p.pos.x;
-        p.pos.x = std::max(p.pos.x, -BOX_WIDTH / 2);
-        p.vel.x = -std::abs(p.vel.x) * DAMPING_FACTOR;
-    } else if(p.pos.x < -BOX_WIDTH / 2) {
-        p.pos.x = -BOX_WIDTH - p.pos.x;
-        p.pos.x = std::min(p.pos.x, BOX_WIDTH / 2);
-        p.vel.x = std::abs(p.vel.x) * DAMPING_FACTOR;
-    }
-
-    if(p.pos.y > BOX_HEIGHT / 2) {
-        p.pos.y = BOX_HEIGHT - p.pos.y;
-        p.pos.y = std::max(p.pos.y, -BOX_HEIGHT / 2);
-        p.vel.y = -std::abs(p.vel.y) * DAMPING_FACTOR;
-    } else if(p.pos.y < -BOX_HEIGHT / 2) {
-        p.pos.y = -BOX_HEIGHT - p.pos.y;
-        p.pos.y = std::min(p.pos.y, BOX_HEIGHT / 2);
-        p.vel.y = std::abs(p.vel.y) * DAMPING_FACTOR;
-    }
-}
-
-static void update_velocities() {
-    for(int i = 0; i < particles.size(); i++) {
-        Particle &p = particles[i];
-        
-        p.pos = p.pos + x_dots[i].vel * dt + x_dots[i].acc * dt * dt * 0.5;
-        p.vel = p.vel + x_dots[i].acc * dt;
-
-        clamp_particle(p);
-    }
-}
-
-
-static inline Vec2 compute_acc(int index) {
-    // return pressure_grads[index] * (-1.0 / densities[index]) + Vec2(0.0f, -9.8f);
-    return pressure_grads[index] * (-1.0 / densities[index]);
-}
-
-static void step_ahead() {
-    for(int i = 0; i < particles.size(); i++) {
-        Particle &p = particles[i];
-        particles_swap[i].pos = p.pos + x_dots[i].vel * dt * TWO_THIRDS;
-        particles_swap[i].vel = p.vel + x_dots[i].acc * dt * TWO_THIRDS;
-    }
-}
-
-static void compute_x_dot() {
-    for(int i = 0; i < particles.size(); i++) {
-        Particle &p = particles[i];
-        x_dots[i].vel = p.vel;
-        x_dots[i].acc = compute_acc(i);
-    }
-}
-
-static void increment_x_dot(float cur_weight) {
-    for(int i = 0; i < particles.size(); i++) {
-        Particle &p = particles[i];
-        StateDerivative s;
-        s.vel = p.vel;
-        s.acc = compute_acc(i);
-        x_dots[i].vel = s.vel * cur_weight + x_dots[i].vel * (1 - cur_weight);
-        x_dots[i].acc = s.acc * cur_weight + x_dots[i].acc * (1 - cur_weight);
-    }
-}
-
-static void print_vec2(Vec2 v) {
-    printf("(%f, %f)\n", v.x, v.y);
-}
-
-static void print_particle(Particle &p) {
-    printf("pos: (%f, %f), vel: (%f, %f)\n", p.pos.x, p.pos.y, p.vel.x, p.vel.y);
-}
 
 static void report_time(Timer &t, const char *str) {
     printf("%s took %f seconds\n", str, t.time());
     t.reset();
 }
 
-static std::vector<float> densities_ref(particles.size());
-static std::vector<float> pressures_ref(particles.size());
-static std::vector<Vec2> pressure_grads_ref(particles.size());
-
-static void compute_refs() {
-    for(int i = 0; i < particles.size(); i++) {
-        float density = compute_density(particles[i].pos);
-        densities_ref[i] = density;
-        pressures_ref[i] = compute_pressure(density);
-    }
-    for(int i = 0; i < particles.size(); i++) {
-        pressure_grads_ref[i] = compute_pressure_grad_newton(i);
-    }
-}
-
-static void check_closeness() {
-    float max1 = 0;
-    float max2 = 0;
-    float max3 = 0;
-    float max4 = 0;
-
-    for(int i = 0; i < particles.size(); i++) {
-        float diff1 = std::abs(densities[i] - densities_ref[i]);
-        max1 = std::max(max1, diff1);
-        float diff2 = std::abs(pressures[i] - pressures_ref[i]);
-        max2 = std::max(max2, diff2);
-        float diff3 = std::abs(pressure_grads[i].x - pressure_grads_ref[i].x);
-        max3 = std::max(max3, diff3);
-        float diff4 = std::abs(pressure_grads[i].y - pressure_grads_ref[i].y);
-        max4 = std::max(max4, diff4);
-    }
-    if(max1 != 0) {
-        printf("density: %f, %.6g\n", densities[0], max1);
-    }
-    if(max2 != 0) {
-        printf("pressure: %f, %.6g\n", pressures[0], max2);
-    }
-    if(max3 != 0) {
-        printf("pressure grad x: %f, %.6g\n", pressure_grads[0].x, max3);
-    }
-    if(max4 != 0) {
-        printf("pressure grad y: %f, %.6g\n", pressure_grads[0].y, max4);
-    }
-}
-
-void increment_time(Timer &timer, double &acc) {
+static void increment_time(Timer &timer, double &acc) {
     acc += timer.time();
     timer.reset();
 }
@@ -603,19 +231,6 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
     tile_particles(particles);
-    particles_swap = particles;
-
-    initializeTexture();
-
-    float multiplier = 1.179;
-    std::vector<Vec2> samples(SAMPLE_TILE_NUMBER * SAMPLE_TILE_NUMBER);
-    for(int j = 0; j < SAMPLE_TILE_NUMBER; j++)
-        for(int i = 0; i < SAMPLE_TILE_NUMBER; i++) {
-            samples[j * SAMPLE_TILE_NUMBER + i] = Vec2(
-                multiplier * (i - SAMPLE_TILE_NUMBER / 2.0f),
-                multiplier * (j - SAMPLE_TILE_NUMBER / 2.0)
-            );
-        }
 
     load_particles_to_gpu(particles.data(), particles.size());
 
@@ -623,17 +238,10 @@ int main() {
 
     Timer duration;
 
-    while(true) {
+    for(int i = 0; i < 1000; i++) {
         
-        // for(Particle &p: particles) {
-        //     printf("particle %d: (%f, %f), (%f, %f) block = %d\n", 
-        //         p.pos.x, p.pos.y,
-        //         p.vel.x, p.vel.x, 
-        //         p.id, p.block);
-        // }
-
-        // if(glfwWindowShouldClose(window))
-        //     break;
+        if(glfwWindowShouldClose(window))
+            break;
 
         duration.reset();
 
@@ -644,44 +252,29 @@ int main() {
         Timer timer;
         compute_densities_and_pressures_gpu(particles.size());
         increment_time(timer, times[0]);
-        // report_time(timer, "density & pressure");
 
         compute_pressure_grads_newton_gpu(particles.size());
         increment_time(timer, times[1]);
 
-        // report_time(timer, "pressure grad");
-
         compute_x_dot_gpu(particles.size());
         increment_time(timer, times[2]);
 
-        // report_time(timer, "x dot");
-
         step_ahead_gpu(particles.size());  
         increment_time(timer, times[3]);
-
-        // report_time(timer, "step ahead");
 
         set_altered();
 
         compute_densities_and_pressures_gpu(particles.size());
         increment_time(timer, times[4]);
 
-        // report_time(timer, "density & pressure");
-
         compute_pressure_grads_newton_gpu(particles.size());
         increment_time(timer, times[5]);
-
-        // report_time(timer, "pressure grad");
 
         compute_x_dot_gpu(particles.size());
         increment_time(timer, times[6]);
 
-        // report_time(timer, "x dot");
-
         update_particles_gpu(particles.size(), particles.data());
         increment_time(timer, times[7]);
-
-        // report_time(timer, "update particles");
 
         // std::string str;
         // std::getline(std::cin, str);
@@ -699,25 +292,15 @@ int main() {
         glColor3f(1.0f, 1.0f, 1.0f);
         drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        if(frame % 60 == 0) {
-            for(Particle &p: particles)
-                if(p.id == 0) {
-                    print_particle(p);
-                    break;
-                }
-        }
-
         glfwSwapBuffers(window);
         glfwPollEvents();
 
         running_duration = momentum * running_duration + (1 - momentum) * duration.time();
 
         if(frame % 100 == 0) {
-            printf("fps: %f\n", 1 / running_duration);
-            printf("density & pressure: %lf\npressure grad: %lf\nx dot: %lf\nstep ahead: %lf\ndensity & pressure: %lf\npressure grad: %lf\nx dot: %lf\nupdate: %lf\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame, times[5] / frame, times[6] / frame, times[7] / frame);
+            printf("\nfps: %.6g\n", 1 / running_duration);
+            printf("density & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nstep ahead: %.6g\ndensity & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nupdate: %.6g\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame, times[5] / frame, times[6] / frame, times[7] / frame);
         }
-
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     glfwDestroyWindow(window);
