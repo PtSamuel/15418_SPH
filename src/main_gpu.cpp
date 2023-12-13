@@ -19,12 +19,12 @@
 #include "bitonic_sort.h"
 
 #define PARTICLES 10
-#define PARTICLE_RADIUS 0.1f
+#define PARTICLE_RADIUS 0.02f
 #define PARTICLE_TILE_NUMBER 512
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.8f
-#define BOX_WIDTH 10.0f
-#define BOX_HEIGHT 10.0f
+#define OCCUPANCY 0.5f
+#define BOX_WIDTH 40.0f
+#define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
@@ -36,8 +36,8 @@
 
 #define TEXTURE_SUBDIVS 128
 
-static const int WINDOW_WIDTH = 800;
-static const int WINDOW_HEIGHT = 600;
+static const int WINDOW_WIDTH = 3696;
+static const int WINDOW_HEIGHT = 2032;
 
 static const float BLOCK_LEN = SMOOTH_RADIUS;
 static const int BLOCKS_X = static_cast<int>(std::ceil(BOX_WIDTH / BLOCK_LEN));
@@ -52,7 +52,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 static float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-static float desired_density = average_density;
+static float desired_density = average_density * 1.5;
 
 static const float dt = 0.01;
 
@@ -140,6 +140,8 @@ static GLFWwindow *create_window() {
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
+    printf("width: %d, height: %d\n", width, height);
+
     float new_width = width, new_height = height;
 
     float ratio = (float)width / height;
@@ -159,19 +161,19 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
     glViewport(bx, by, new_width, new_height);
 
-    float viewport_padding_y = BOX_HEIGHT * 0.1;
-    float viewport_padding_x = BOX_WIDTH / BOX_HEIGHT * viewport_padding_y;
+    // float viewport_padding_y = BOX_HEIGHT * 0.1;
+    // float viewport_padding_x = BOX_WIDTH / BOX_HEIGHT * viewport_padding_y;
 
-    viewport_width = BOX_WIDTH + 2 * viewport_padding_x;
-    viewport_height = BOX_HEIGHT + 2 * viewport_padding_y;
+    // viewport_width = BOX_WIDTH + 2 * viewport_padding_x;
+    // viewport_height = BOX_HEIGHT + 2 * viewport_padding_y;
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(
-        -viewport_width / 2, 
-        viewport_width / 2, 
-        -viewport_height / 2, 
-        viewport_height / 2, 
+        -BOX_WIDTH / 2, 
+        BOX_WIDTH / 2, 
+        -BOX_HEIGHT / 2, 
+        BOX_HEIGHT / 2, 
         -1.0, 1.0
     );
     glMatrixMode(GL_MODELVIEW);
@@ -686,29 +688,29 @@ int main() {
         // std::string str;
         // std::getline(std::cin, str);
 
-        // glClear(GL_COLOR_BUFFER_BIT);   
-        // for(auto &p: particles) {
-        //     if(p.id == 255)
-        //         glColor3f(1.0f, 0.0f, 0.0f);
-        //     else 
-        //         glColor3f(1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);   
+        for(auto &p: particles) {
+            if(p.id == 255)
+                glColor3f(1.0f, 0.0f, 0.0f);
+            else 
+                glColor3f(1.0f, 1.0f, 1.0f);
 
-        //     renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
-        // }
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+        }
         
-        // glColor3f(1.0f, 1.0f, 1.0f);
-        // drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
-        // if(frame % 60 == 0) {
-        //     for(Particle &p: particles)
-        //         if(p.id == 0) {
-        //             print_particle(p);
-        //             break;
-        //         }
-        // }
+        if(frame % 60 == 0) {
+            for(Particle &p: particles)
+                if(p.id == 0) {
+                    print_particle(p);
+                    break;
+                }
+        }
 
-        // glfwSwapBuffers(window);
-        // glfwPollEvents();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
 
         running_duration = momentum * running_duration + (1 - momentum) * duration.time();
 

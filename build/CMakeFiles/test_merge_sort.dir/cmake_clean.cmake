@@ -1,8 +1,10 @@
 file(REMOVE_RECURSE
-  "../test_merge_sort"
-  "../test_merge_sort.pdb"
+  "/home/tzhang/Desktop/recording/15418_SPH/test_merge_sort"
+  "/home/tzhang/Desktop/recording/15418_SPH/test_merge_sort.pdb"
   "CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o"
+  "CMakeFiles/test_merge_sort.dir/src/bitonic_sort.cu.o.d"
   "CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o"
+  "CMakeFiles/test_merge_sort.dir/src/test_bitonic_sort.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

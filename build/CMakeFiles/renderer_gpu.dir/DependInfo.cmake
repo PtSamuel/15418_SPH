@@ -1,31 +1,20 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
-  "CUDA"
-  "CXX"
-  )
-# The set of files for implicit dependencies of each language:
-set(CMAKE_DEPENDS_CHECK_CUDA
-  "/home/johnsmith/Desktop/15418_project/src/bitonic_sort.cu" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o"
-  "/home/johnsmith/Desktop/15418_project/src/gpu.cu" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/renderer_gpu.dir/src/gpu.cu.o"
-  )
-set(CMAKE_CUDA_COMPILER_ID "NVIDIA")
-
-# The include file search paths:
-set(CMAKE_CUDA_TARGET_INCLUDE_PATH
-  "../src/include"
-  )
-set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/johnsmith/Desktop/15418_project/src/main_gpu.cpp" "/home/johnsmith/Desktop/15418_project/build/CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.o"
-  )
-set(CMAKE_CXX_COMPILER_ID "GNU")
-
-# The include file search paths:
-set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "../src/include"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/tzhang/Desktop/recording/15418_SPH/src/bitonic_sort.cu" "CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o" "gcc" "CMakeFiles/renderer_gpu.dir/src/bitonic_sort.cu.o.d"
+  "/home/tzhang/Desktop/recording/15418_SPH/src/gpu.cu" "CMakeFiles/renderer_gpu.dir/src/gpu.cu.o" "gcc" "CMakeFiles/renderer_gpu.dir/src/gpu.cu.o.d"
+  "/home/tzhang/Desktop/recording/15418_SPH/src/main_gpu.cpp" "CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.o" "gcc" "CMakeFiles/renderer_gpu.dir/src/main_gpu.cpp.o.d"
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.
