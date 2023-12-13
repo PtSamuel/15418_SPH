@@ -772,7 +772,7 @@ __device__ inline float2 compute_acc(int id) {
     float2 grad = params.pressure_grads[id];
     return make_float2(
         grad.x * (-1.0 / params.densities[id]),
-        grad.y * (-1.0 / params.densities[id]) - 5.0f
+        grad.y * (-1.0 / params.densities[id])
     );
 }
 
@@ -838,10 +838,10 @@ __global__ void step_ahead(int n, Particle *particles, Particle *update) {
 
     Particle cur = particles[index];
 
-    cur.pos.x += params.x_dots[cur.id].vel.x * params.dt * TWO_THIRDS * 5;
-    cur.pos.y += params.x_dots[cur.id].vel.y * params.dt * TWO_THIRDS * 5;
-    cur.vel.x += params.x_dots[cur.id].acc.x * params.dt * TWO_THIRDS * 5;
-    cur.vel.y += params.x_dots[cur.id].acc.y * params.dt * TWO_THIRDS * 5;
+    cur.pos.x += params.x_dots[cur.id].vel.x * params.dt * TWO_THIRDS;
+    cur.pos.y += params.x_dots[cur.id].vel.y * params.dt * TWO_THIRDS;
+    cur.vel.x += params.x_dots[cur.id].acc.x * params.dt * TWO_THIRDS;
+    cur.vel.y += params.x_dots[cur.id].acc.y * params.dt * TWO_THIRDS;
 
     // LEAPFROG
     // cur.pos.x += params.x_dots[index].vel.x * params.dt * 0.5;
@@ -871,21 +871,38 @@ __device__ inline void clamp_particle(Particle &p) {
         p.pos.x = box_width - p.pos.x;
         p.pos.x = fmax(p.pos.x, -box_width / 2);
         p.vel.x = -fabs(p.vel.x);
+
+        // if(fabs(p.vel.x) > 10)
+        //     p.vel.x *= 0.5;
+
     } else if(p.pos.x < -box_width / 2) {
         p.pos.x = -box_width - p.pos.x;
         p.pos.x = fmin(p.pos.x, box_width / 2);
         p.vel.x = fabs(p.vel.x);
+        
+        // if(fabs(p.vel.x) > 10)
+        //     p.vel.x *= 0.5;
+
     }
 
     if(p.pos.y > box_height / 2) {
         p.pos.y = box_height - p.pos.y;
         p.pos.y = fmax(p.pos.y, -box_height / 2);
         p.vel.y = -fabs(p.vel.y);
+        
+        // if(fabs(p.vel.y) > 10)
+        //     p.vel.y *= 0.5;
+    
     } else if(p.pos.y < -box_height / 2) {
         p.pos.y = -box_height - p.pos.y;
         p.pos.y = fmin(p.pos.y, box_height / 2);
         p.vel.y = fabs(p.vel.y);
+        
+        // if(fabs(p.vel.y) > 10)
+        //     p.vel.y *= 0.5;
+    
     }
+
 }
 
 __global__ void update_particle(int n, Particle *particles) {

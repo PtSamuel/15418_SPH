@@ -19,8 +19,8 @@
 #include "bitonic_sort.h"
 
 #define PARTICLES 10
-#define PARTICLE_RADIUS 0.05f
-#define PARTICLE_TILE_NUMBER 512
+#define PARTICLE_RADIUS 0.1f
+#define PARTICLE_TILE_NUMBER 64
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.5f
 #define BOX_WIDTH 40.0f
@@ -52,7 +52,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 static float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-static float desired_density = average_density * 1.5;
+static float desired_density = average_density;
 // static float desired_density = average_density * 0.67;
 // static float desired_density = average_density;
 
@@ -691,11 +691,21 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT);   
         for(auto &p: particles) {
-            if(p.id == 255)
-                glColor3f(1.0f, 0.0f, 0.0f);
-            else 
-                glColor3f(1.0f, 1.0f, 1.0f);
+            // float vel = sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y) / 10;
+            // printf("%f\n", vel);
+            // vel = std::min(1.0f, vel);
+            // float r = vel;
+            // if(vel <= 0.5)
+            //     glColor3f(0.0f, r, 1.0f - r);
+            // else
+            //     glColor3f(r, 1.0f - r, 0.0f);
+            // glColor3f(r, 0.0f, 1.0f - r);
 
+            // if(p.id == 255)
+            //     glColor3f(1.0f, 0.0f, 0.0f);
+            // else 
+            //     glColor3f(1.0f, 1.0f, 1.0f);
+            glColor3f(1.0f, 1.0f, 1.0f);
             renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
         }
         
