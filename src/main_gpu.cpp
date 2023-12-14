@@ -20,11 +20,11 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.05f
-#define PARTICLE_TILE_NUMBER 64
+#define PARTICLE_TILE_NUMBER 128
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.5f
-#define BOX_WIDTH 40.0f
-#define BOX_HEIGHT 20.0f
+#define OCCUPANCY 0.8f
+#define BOX_WIDTH 10.0f
+#define BOX_HEIGHT 10.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
@@ -52,7 +52,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 static float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-static float desired_density = average_density;
+static float desired_density = average_density * 16;
 
 static const float dt = 0.01;
 
@@ -238,7 +238,7 @@ int main() {
 
     Timer duration;
 
-    while(true) {
+    for(int i = 0; i < 1000; i++) {
         
         if(glfwWindowShouldClose(window))
             break;
@@ -299,7 +299,7 @@ int main() {
 
         if(frame % 100 == 0) {
             printf("\nfps: %.6g\n", 1 / running_duration);
-            printf("density & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nstep ahead: %.6g\ndensity & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nupdate: %.6g\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame, times[5] / frame, times[6] / frame, times[7] / frame);
+            // printf("density & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nstep ahead: %.6g\ndensity & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nupdate: %.6g\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame, times[5] / frame, times[6] / frame, times[7] / frame);
         }
     }
 
