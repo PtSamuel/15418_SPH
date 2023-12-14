@@ -19,8 +19,8 @@
 #include "bitonic_sort.h"
 
 #define PARTICLES 10
-#define PARTICLE_RADIUS 0.02f
-#define PARTICLE_TILE_NUMBER 512
+#define PARTICLE_RADIUS 0.05f
+#define PARTICLE_TILE_NUMBER 128
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.5f
 #define BOX_WIDTH 40.0f
@@ -52,7 +52,7 @@ float kernel_volume = SMOOTH_RADIUS4 * M_PI / 6;
 float normalizer = 1 / kernel_volume;
 
 static float average_density = PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMBER / (BOX_WIDTH * BOX_HEIGHT);
-static float desired_density = average_density * 1.5;
+static float desired_density = average_density;
 
 static const float dt = 0.01;
 

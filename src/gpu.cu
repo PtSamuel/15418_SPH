@@ -772,7 +772,7 @@ __device__ inline float2 compute_acc(int id) {
     float2 grad = params.pressure_grads[id];
     return make_float2(
         grad.x * (-1.0 / params.densities[id]),
-        grad.y * (-1.0 / params.densities[id]) - 5.0f
+        grad.y * (-1.0 / params.densities[id])
     );
 }
 
