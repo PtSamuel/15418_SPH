@@ -17,11 +17,11 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.05f
-#define PARTICLE_TILE_NUMBER 64
+#define PARTICLE_TILE_NUMBER 128
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.5f
+#define OCCUPANCY 0.8f
 #define BOX_WIDTH 40.0f
-#define BOX_HEIGHT 20.0f
+#define BOX_HEIGHT 40.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
@@ -33,8 +33,8 @@
 
 #define TEXTURE_SUBDIVS 128
 
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+static const int WINDOW_WIDTH = 1848;
+static const int WINDOW_HEIGHT = 1016;
 
 const float BLOCK_LEN = SMOOTH_RADIUS;
 const int BLOCKS_X = static_cast<int>(std::ceil(BOX_WIDTH / BLOCK_LEN));
@@ -723,7 +723,7 @@ int main() {
     // distribute, density & pressure, grad, x dot, update 
     static double times[] = { 0, 0, 0, 0, 0 };
 
-    for(int i = 0; i < 1000; i++) {
+    while(true) {
 
         duration.reset();
 
