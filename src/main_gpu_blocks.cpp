@@ -19,11 +19,11 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 512
+#define PARTICLE_TILE_NUMBER 128
 #define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.8f
-#define BOX_WIDTH 10.0f
-#define BOX_HEIGHT 10.0f
+#define BOX_WIDTH 40.0f
+#define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
 #define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
@@ -615,7 +615,7 @@ int main() {
     
     Timer duration;
 
-    for(int i = 0; i < 200; i++) {
+    for(int i = 0; i < 1000; i++) {
 
         duration.reset();
 
