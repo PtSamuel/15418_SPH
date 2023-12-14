@@ -16,11 +16,11 @@
 #include "Timer.h"
 
 #define PARTICLES 10
-#define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 512
+#define PARTICLE_RADIUS 0.05f
+#define PARTICLE_TILE_NUMBER 64
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.8f
-#define BOX_WIDTH 20.0f
+#define OCCUPANCY 0.5f
+#define BOX_WIDTH 40.0f
 #define BOX_HEIGHT 20.0f
 #define EPS 1e-3f
 #define SMOOTH_RADIUS 1.0f
@@ -723,7 +723,7 @@ int main() {
     // distribute, density & pressure, grad, x dot, update 
     static double times[] = { 0, 0, 0, 0, 0 };
 
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < 1000; i++) {
 
         duration.reset();
 
