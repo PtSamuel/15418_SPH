@@ -16,10 +16,10 @@
 #include "Timer.h"
 
 #define PARTICLES 10
-#define PARTICLE_RADIUS 0.05f
-#define PARTICLE_TILE_NUMBER 128
+#define PARTICLE_RADIUS 0.1f
+#define PARTICLE_TILE_NUMBER 64
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.8f
+#define OCCUPANCY 0.5f
 #define BOX_WIDTH 40.0f
 #define BOX_HEIGHT 40.0f
 #define EPS 1e-3f

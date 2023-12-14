@@ -20,9 +20,9 @@
 
 #define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
-#define PARTICLE_TILE_NUMBER 128
+#define PARTICLE_TILE_NUMBER 64
 #define SAMPLE_TILE_NUMBER 10
-#define OCCUPANCY 0.8f
+#define OCCUPANCY 0.5f
 #define BOX_WIDTH 40.0f
 #define BOX_HEIGHT 40.0f
 #define EPS 1e-3f
@@ -288,7 +288,7 @@ int main() {
             // else 
                 glColor3f(1.0f, 1.0f, 1.0f);
 
-            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS / 2);
+            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
         }
         
         glColor3f(1.0f, 1.0f, 1.0f);
