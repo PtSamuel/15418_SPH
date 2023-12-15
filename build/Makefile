@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/johnsmith/Desktop/15418_project/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -163,17 +163,17 @@ renderer_gpu_bitonic/fast:
 .PHONY : renderer_gpu_bitonic/fast
 
 #=============================================================================
-# Target rules for targets named renderer
+# Target rules for targets named renderer_debug
 
 # Build rule for target.
-renderer: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 renderer
-.PHONY : renderer
+renderer_debug: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 renderer_debug
+.PHONY : renderer_debug
 
 # fast build rule for target.
-renderer/fast:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/build
-.PHONY : renderer/fast
+renderer_debug/fast:
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/build
+.PHONY : renderer_debug/fast
 
 src/bitonic_sort.o: src/bitonic_sort.cu.o
 
@@ -265,7 +265,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.o
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -274,7 +274,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.i
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -283,7 +283,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/src/main.cpp.s
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 src/main_cpu_blocks.o: src/main_cpu_blocks.cpp.o
@@ -400,13 +400,13 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... renderer_gpu_blocks"
 	@echo "... test_bitonic_sort"
 	@echo "... renderer_cpu_blocks"
 	@echo "... renderer_gpu_bitonic"
-	@echo "... renderer"
+	@echo "... rebuild_cache"
+	@echo "... renderer_debug"
 	@echo "... src/bitonic_sort.o"
 	@echo "... src/bitonic_sort.i"
 	@echo "... src/bitonic_sort.s"

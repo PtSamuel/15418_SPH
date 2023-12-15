@@ -57,7 +57,7 @@ all: CMakeFiles/renderer_gpu_blocks.dir/all
 all: CMakeFiles/test_bitonic_sort.dir/all
 all: CMakeFiles/renderer_cpu_blocks.dir/all
 all: CMakeFiles/renderer_gpu_bitonic.dir/all
-all: CMakeFiles/renderer.dir/all
+all: CMakeFiles/renderer_debug.dir/all
 
 .PHONY : all
 
@@ -71,7 +71,7 @@ clean: CMakeFiles/renderer_gpu_blocks.dir/clean
 clean: CMakeFiles/test_bitonic_sort.dir/clean
 clean: CMakeFiles/renderer_cpu_blocks.dir/clean
 clean: CMakeFiles/renderer_gpu_bitonic.dir/clean
-clean: CMakeFiles/renderer.dir/clean
+clean: CMakeFiles/renderer_debug.dir/clean
 
 .PHONY : clean
 
@@ -136,7 +136,7 @@ CMakeFiles/test_bitonic_sort.dir/clean:
 CMakeFiles/renderer_cpu_blocks.dir/all:
 	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/depend
 	$(MAKE) -f CMakeFiles/renderer_cpu_blocks.dir/build.make CMakeFiles/renderer_cpu_blocks.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=3,4 "Built target renderer_cpu_blocks"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=1,2 "Built target renderer_cpu_blocks"
 .PHONY : CMakeFiles/renderer_cpu_blocks.dir/all
 
 # Build rule for subdir invocation for target.
@@ -184,31 +184,31 @@ CMakeFiles/renderer_gpu_bitonic.dir/clean:
 .PHONY : CMakeFiles/renderer_gpu_bitonic.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/renderer.dir
+# Target rules for target CMakeFiles/renderer_debug.dir
 
 # All Build rule for target.
-CMakeFiles/renderer.dir/all:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/depend
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=1,2 "Built target renderer"
-.PHONY : CMakeFiles/renderer.dir/all
+CMakeFiles/renderer_debug.dir/all:
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/depend
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=3,4 "Built target renderer_debug"
+.PHONY : CMakeFiles/renderer_debug.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/renderer.dir/rule: cmake_check_build_system
+CMakeFiles/renderer_debug.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 2
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/renderer.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/renderer_debug.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 0
-.PHONY : CMakeFiles/renderer.dir/rule
+.PHONY : CMakeFiles/renderer_debug.dir/rule
 
 # Convenience name for target.
-renderer: CMakeFiles/renderer.dir/rule
+renderer_debug: CMakeFiles/renderer_debug.dir/rule
 
-.PHONY : renderer
+.PHONY : renderer_debug
 
 # clean rule for target.
-CMakeFiles/renderer.dir/clean:
-	$(MAKE) -f CMakeFiles/renderer.dir/build.make CMakeFiles/renderer.dir/clean
-.PHONY : CMakeFiles/renderer.dir/clean
+CMakeFiles/renderer_debug.dir/clean:
+	$(MAKE) -f CMakeFiles/renderer_debug.dir/build.make CMakeFiles/renderer_debug.dir/clean
+.PHONY : CMakeFiles/renderer_debug.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

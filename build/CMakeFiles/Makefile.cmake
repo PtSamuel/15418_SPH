@@ -59,5 +59,5 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/test_bitonic_sort.dir/DependInfo.cmake"
   "CMakeFiles/renderer_cpu_blocks.dir/DependInfo.cmake"
   "CMakeFiles/renderer_gpu_bitonic.dir/DependInfo.cmake"
-  "CMakeFiles/renderer.dir/DependInfo.cmake"
+  "CMakeFiles/renderer_debug.dir/DependInfo.cmake"
   )
