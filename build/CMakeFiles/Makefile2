@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/johnsmith/Desktop/15418_project/build
 
 # The main recursive "all" target.
 all: CMakeFiles/renderer_gpu_blocks.dir/all
-all: CMakeFiles/test_merge_sort.dir/all
+all: CMakeFiles/test_bitonic_sort.dir/all
 all: CMakeFiles/renderer_cpu_blocks.dir/all
 all: CMakeFiles/renderer_gpu_bitonic.dir/all
 all: CMakeFiles/renderer.dir/all
@@ -68,7 +68,7 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/renderer_gpu_blocks.dir/clean
-clean: CMakeFiles/test_merge_sort.dir/clean
+clean: CMakeFiles/test_bitonic_sort.dir/clean
 clean: CMakeFiles/renderer_cpu_blocks.dir/clean
 clean: CMakeFiles/renderer_gpu_bitonic.dir/clean
 clean: CMakeFiles/renderer.dir/clean
@@ -103,31 +103,31 @@ CMakeFiles/renderer_gpu_blocks.dir/clean:
 .PHONY : CMakeFiles/renderer_gpu_blocks.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/test_merge_sort.dir
+# Target rules for target CMakeFiles/test_bitonic_sort.dir
 
 # All Build rule for target.
-CMakeFiles/test_merge_sort.dir/all:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/depend
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=12,13,14 "Built target test_merge_sort"
-.PHONY : CMakeFiles/test_merge_sort.dir/all
+CMakeFiles/test_bitonic_sort.dir/all:
+	$(MAKE) -f CMakeFiles/test_bitonic_sort.dir/build.make CMakeFiles/test_bitonic_sort.dir/depend
+	$(MAKE) -f CMakeFiles/test_bitonic_sort.dir/build.make CMakeFiles/test_bitonic_sort.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=12,13,14 "Built target test_bitonic_sort"
+.PHONY : CMakeFiles/test_bitonic_sort.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/test_merge_sort.dir/rule: cmake_check_build_system
+CMakeFiles/test_bitonic_sort.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 3
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/test_merge_sort.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/test_bitonic_sort.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/johnsmith/Desktop/15418_project/build/CMakeFiles 0
-.PHONY : CMakeFiles/test_merge_sort.dir/rule
+.PHONY : CMakeFiles/test_bitonic_sort.dir/rule
 
 # Convenience name for target.
-test_merge_sort: CMakeFiles/test_merge_sort.dir/rule
+test_bitonic_sort: CMakeFiles/test_bitonic_sort.dir/rule
 
-.PHONY : test_merge_sort
+.PHONY : test_bitonic_sort
 
 # clean rule for target.
-CMakeFiles/test_merge_sort.dir/clean:
-	$(MAKE) -f CMakeFiles/test_merge_sort.dir/build.make CMakeFiles/test_merge_sort.dir/clean
-.PHONY : CMakeFiles/test_merge_sort.dir/clean
+CMakeFiles/test_bitonic_sort.dir/clean:
+	$(MAKE) -f CMakeFiles/test_bitonic_sort.dir/build.make CMakeFiles/test_bitonic_sort.dir/clean
+.PHONY : CMakeFiles/test_bitonic_sort.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/renderer_cpu_blocks.dir

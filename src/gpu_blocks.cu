@@ -7,13 +7,13 @@
 #include "Timer.h"
 
 #define BLOCK_DIM 16
-#define THREADS_PER_BLOCK BLOCK_DIM * BLOCK_DIM
+#define THREADS_PER_BLOCK (BLOCK_DIM * BLOCK_DIM)
 
 #define TWO_THIRDS 2.0f / 3.0f
 
 #define SMOOTH_RADIUS 1.0f
-#define SMOOTH_RADIUS2 SMOOTH_RADIUS * SMOOTH_RADIUS
-#define SMOOTH_RADIUS4 SMOOTH_RADIUS2 * SMOOTH_RADIUS2
+#define SMOOTH_RADIUS2 (SMOOTH_RADIUS * SMOOTH_RADIUS)
+#define SMOOTH_RADIUS4 (SMOOTH_RADIUS2 * SMOOTH_RADIUS2)
 
 #define PRESSURE_RESPONSE 200.0f
 
@@ -525,7 +525,6 @@ __global__ void update_particle(int n, Particle *particles) {
     Particle p = particles[index];
         
     float dt = params.dt;
-    // StateDerivateCUDA *x_dot = params.x_dots;
     
     // RK2
     p.pos.x += params.x_dots[index].vel.x * dt + params.x_dots[index].acc.x * dt * dt * 0.5;

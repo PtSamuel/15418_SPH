@@ -16,7 +16,7 @@ cmath
 chrono
 -
 
-/home/johnsmith/Desktop/15418_project/src/cpu_blocks.cpp
+/home/johnsmith/Desktop/15418_project/src/main_cpu_blocks.cpp
 GL/glew.h
 -
 GLFW/glfw3.h

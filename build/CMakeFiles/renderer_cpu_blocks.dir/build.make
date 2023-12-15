@@ -57,27 +57,27 @@ include CMakeFiles/renderer_cpu_blocks.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/renderer_cpu_blocks.dir/flags.make
 
-CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o: CMakeFiles/renderer_cpu_blocks.dir/flags.make
-CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o: ../src/cpu_blocks.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o -c /home/johnsmith/Desktop/15418_project/src/cpu_blocks.cpp
+CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.o: CMakeFiles/renderer_cpu_blocks.dir/flags.make
+CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.o: ../src/main_cpu_blocks.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/johnsmith/Desktop/15418_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.o -c /home/johnsmith/Desktop/15418_project/src/main_cpu_blocks.cpp
 
-CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/johnsmith/Desktop/15418_project/src/cpu_blocks.cpp > CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.i
+CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/johnsmith/Desktop/15418_project/src/main_cpu_blocks.cpp > CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.i
 
-CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/johnsmith/Desktop/15418_project/src/cpu_blocks.cpp -o CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.s
+CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/johnsmith/Desktop/15418_project/src/main_cpu_blocks.cpp -o CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.s
 
 # Object files for target renderer_cpu_blocks
 renderer_cpu_blocks_OBJECTS = \
-"CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o"
+"CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.o"
 
 # External object files for target renderer_cpu_blocks
 renderer_cpu_blocks_EXTERNAL_OBJECTS =
 
-../renderer_cpu_blocks: CMakeFiles/renderer_cpu_blocks.dir/src/cpu_blocks.cpp.o
+../renderer_cpu_blocks: CMakeFiles/renderer_cpu_blocks.dir/src/main_cpu_blocks.cpp.o
 ../renderer_cpu_blocks: CMakeFiles/renderer_cpu_blocks.dir/build.make
 ../renderer_cpu_blocks: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 ../renderer_cpu_blocks: /usr/lib/x86_64-linux-gnu/libGLX.so

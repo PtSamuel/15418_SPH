@@ -18,10 +18,8 @@
 #include "gpu.h"
 #include "bitonic_sort.h"
 
-#define PARTICLES 10
 #define PARTICLE_RADIUS 0.1f
 #define PARTICLE_TILE_NUMBER 64
-#define SAMPLE_TILE_NUMBER 10
 #define OCCUPANCY 0.5f
 #define BOX_WIDTH 40.0f
 #define BOX_HEIGHT 40.0f
@@ -33,8 +31,6 @@
 #define DAMPING_FACTOR 1.0f
 
 #define PRESSURE_RESPONSE 200.0f
-
-#define TEXTURE_SUBDIVS 128
 
 static const int WINDOW_WIDTH = 1848;
 static const int WINDOW_HEIGHT = 1016;
@@ -56,9 +52,6 @@ static float desired_density = average_density;
 
 static const float dt = 0.01;
 
-static std::mt19937 gen(114514);
-static std::uniform_real_distribution<float> distribution(0, 1);
-
 static float viewport_width;
 static float viewport_height;
 
@@ -66,17 +59,17 @@ static std::vector<Particle> particles(PARTICLE_TILE_NUMBER * PARTICLE_TILE_NUMB
 
 static int frame = 0;
 
-static void errorCallback(int error, const char *description) {
+static void error_callback(int error, const char *description) {
     std::cerr << "Error: " << description << std::endl;
 }
 
-static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 }
 
-static void renderCircle(float x, float y, float radius) {
+static void render_circle(float x, float y, float radius) {
     const int sides = 100;
 
     glBegin(GL_TRIANGLE_FAN);
@@ -92,7 +85,7 @@ static void renderCircle(float x, float y, float radius) {
     glEnd();
 }
 
-static void drawBox(float x1, float y1, float x2, float y2) {
+static void draw_box(float x1, float y1, float x2, float y2) {
     glBegin(GL_LINE_LOOP);
     glVertex2f(x1, y1);
     glVertex2f(x2, y1);
@@ -107,7 +100,7 @@ static GLFWwindow *create_window() {
         exit(1);
     }
 
-    glfwSetErrorCallback(errorCallback);
+    glfwSetErrorCallback(error_callback);
 
     GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "OpenGL Circle", NULL, NULL);
     if (!window) {
@@ -122,7 +115,7 @@ static GLFWwindow *create_window() {
         exit(1);
     }
 
-    glfwSetKeyCallback(window, keyCallback);
+    glfwSetKeyCallback(window, key_callback);
 
     return window;
 }
@@ -253,46 +246,31 @@ int main() {
 
         Timer timer;
         compute_densities_and_pressures_gpu(particles.size());
-        increment_time(timer, times[0]);
 
         compute_pressure_grads_newton_gpu(particles.size());
-        increment_time(timer, times[1]);
 
         compute_x_dot_gpu(particles.size());
-        increment_time(timer, times[2]);
 
         step_ahead_gpu(particles.size());  
-        increment_time(timer, times[3]);
 
         set_altered();
 
         compute_densities_and_pressures_gpu(particles.size());
-        increment_time(timer, times[4]);
 
         compute_pressure_grads_newton_gpu(particles.size());
-        increment_time(timer, times[5]);
 
         compute_x_dot_gpu(particles.size());
-        increment_time(timer, times[6]);
 
         update_particles_gpu(particles.size(), particles.data());
-        increment_time(timer, times[7]);
-
-        // std::string str;
-        // std::getline(std::cin, str);
 
         glClear(GL_COLOR_BUFFER_BIT);   
+        glColor3f(1.0f, 1.0f, 1.0f);
         for(auto &p: particles) {
-            // if(p.id == 255)
-            //     glColor3f(1.0f, 0.0f, 0.0f);
-            // else 
-                glColor3f(1.0f, 1.0f, 1.0f);
-
-            renderCircle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
+            render_circle(p.pos.x, p.pos.y, PARTICLE_RADIUS);
         }
         
         glColor3f(1.0f, 1.0f, 1.0f);
-        drawBox(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
+        draw_box(-BOX_WIDTH / 2 + EPS, -BOX_HEIGHT / 2 + EPS, BOX_WIDTH / 2 - EPS, BOX_HEIGHT / 2 - EPS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -301,7 +279,6 @@ int main() {
 
         if(frame % 100 == 0) {
             printf("\nfps: %.6g\n", 1 / running_duration);
-            // printf("density & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nstep ahead: %.6g\ndensity & pressure: %.6g\npressure grad: %.6g\nx dot: %.6g\nupdate: %.6g\n\n", times[0] / frame, times[1] / frame, times[2] / frame, times[3] / frame, times[4] / frame, times[5] / frame, times[6] / frame, times[7] / frame);
         }
     }
 

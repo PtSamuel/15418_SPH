@@ -56,7 +56,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/renderer_gpu_blocks.dir/DependInfo.cmake"
-  "CMakeFiles/test_merge_sort.dir/DependInfo.cmake"
+  "CMakeFiles/test_bitonic_sort.dir/DependInfo.cmake"
   "CMakeFiles/renderer_cpu_blocks.dir/DependInfo.cmake"
   "CMakeFiles/renderer_gpu_bitonic.dir/DependInfo.cmake"
   "CMakeFiles/renderer.dir/DependInfo.cmake"

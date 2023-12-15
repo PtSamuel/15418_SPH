@@ -7,11 +7,10 @@ find_package(CUDA REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 
-
 add_executable(renderer src/main.cpp)
 add_executable(renderer_gpu_bitonic src/main_gpu.cpp src/gpu.cu src/bitonic_sort.cu)
-add_executable(test_merge_sort src/bitonic_sort.cu src/test_bitonic_sort.cpp)
-add_executable(renderer_cpu_blocks src/cpu_blocks.cpp)
+add_executable(test_bitonic_sort src/bitonic_sort.cu src/test_bitonic_sort.cpp)
+add_executable(renderer_cpu_blocks src/main_cpu_blocks.cpp)
 add_executable(renderer_gpu_blocks src/main_gpu_blocks.cpp src/gpu_blocks.cu)
 
 include_directories("${CMAKE_SOURCE_DIR}/src/include")

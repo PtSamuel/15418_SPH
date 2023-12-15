@@ -9,7 +9,6 @@ int main() {
     for(int i = 0; i < test_length; i++) {
         particles[i].id = i;
         particles[i].block = test_length - 1 - i;
-        // particles[i].block = i;
     }
 
     particles[2].block = 12;
@@ -22,7 +21,7 @@ int main() {
         printf("%d: %d\n", particles[i].id, particles[i].block);
     }
 
-    bitonic_sort(particles.data(), test_length);
+    bitonic_sort_cpu(particles.data(), test_length);
 
     printf("after:\n");
     for(int i = 0; i < test_length; i++) {
